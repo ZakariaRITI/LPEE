@@ -1,0 +1,128 @@
+package ma.lpee.lpeebackend.service.impl;
+
+import lombok.RequiredArgsConstructor;
+import ma.lpee.lpeebackend.dto.request.RealisationEssaiRequestDTO;
+import ma.lpee.lpeebackend.dto.response.RealisationEssaiResponseDTO;
+import ma.lpee.lpeebackend.entity.RealisationEssai;
+import ma.lpee.lpeebackend.mapper.RealisationEssaiMapper;
+import ma.lpee.lpeebackend.repository.RealisationEssaiRepository;
+import ma.lpee.lpeebackend.service.RealisationEssaiService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class RealisationEssaiServiceImpl implements RealisationEssaiService {
+
+    private final RealisationEssaiRepository realisationEssaiRepository;
+    private final RealisationEssaiMapper realisationEssaiMapper;
+
+    @Override
+    public RealisationEssaiResponseDTO create(RealisationEssaiRequestDTO dto) {
+
+        RealisationEssai entity = realisationEssaiMapper.toEntity(dto);
+
+        entity.setCreeLe(LocalDateTime.now());
+
+        RealisationEssai savedEntity = realisationEssaiRepository.save(entity);
+
+        return realisationEssaiMapper.toResponseDTO(savedEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RealisationEssaiResponseDTO findById(Long id) {
+
+        RealisationEssai entity = realisationEssaiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "Réalisation d'essai introuvable avec l'id : " + id
+                ));
+
+        return realisationEssaiMapper.toResponseDTO(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RealisationEssaiResponseDTO> findAll() {
+
+        return realisationEssaiRepository.findAll()
+                .stream()
+                .map(realisationEssaiMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public RealisationEssaiResponseDTO update(
+            Long id,
+            RealisationEssaiRequestDTO dto) {
+
+        RealisationEssai entity = realisationEssaiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "Réalisation d'essai introuvable avec l'id : " + id
+                ));
+
+        realisationEssaiMapper.updateEntityFromDto(dto, entity);
+
+        entity.setModifieLe(LocalDateTime.now());
+
+        RealisationEssai updatedEntity =
+                realisationEssaiRepository.save(entity);
+
+        return realisationEssaiMapper.toResponseDTO(updatedEntity);
+    }
+
+    @Override
+    public void delete(Long id) {
+
+        RealisationEssai entity = realisationEssaiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "Réalisation d'essai introuvable avec l'id : " + id
+                ));
+
+        realisationEssaiRepository.delete(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RealisationEssaiResponseDTO> findByEssai(Long idEssai) {
+
+        return realisationEssaiRepository.findByEssaiIdEssai(idEssai)
+                .stream()
+                .map(realisationEssaiMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RealisationEssaiResponseDTO> findByUnite(Long idUnite) {
+
+        return realisationEssaiRepository.findByUniteIdUnite(idUnite)
+                .stream()
+                .map(realisationEssaiMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RealisationEssaiResponseDTO> findByCreePar(Long idUser) {
+
+        return realisationEssaiRepository.findByCreePar(idUser)
+                .stream()
+                .map(realisationEssaiMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RealisationEssaiResponseDTO> findByStatut(String statut) {
+
+        return realisationEssaiRepository.findByStatut(statut)
+                .stream()
+                .map(realisationEssaiMapper::toResponseDTO)
+                .toList();
+    }
+}

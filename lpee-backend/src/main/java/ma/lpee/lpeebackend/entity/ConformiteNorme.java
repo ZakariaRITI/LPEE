@@ -19,6 +19,7 @@ public class ConformiteNorme {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_conformite")
     private Long idConformite;
+    
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_essai", nullable = false)
