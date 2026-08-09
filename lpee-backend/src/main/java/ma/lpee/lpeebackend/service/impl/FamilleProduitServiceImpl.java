@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.FamilleProduitRequestDTO;
 import ma.lpee.lpeebackend.dto.response.FamilleProduitResponseDTO;
 import ma.lpee.lpeebackend.entity.FamilleProduit;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.FamilleProduitMapper;
 import ma.lpee.lpeebackend.repository.FamilleProduitRepository;
 import ma.lpee.lpeebackend.service.FamilleProduitService;
@@ -24,7 +26,9 @@ public class FamilleProduitServiceImpl implements FamilleProduitService {
     public FamilleProduitResponseDTO create(FamilleProduitRequestDTO requestDTO) {
 
         if (familleProduitRepository.existsByCodeFamille(requestDTO.getCodeFamille())) {
-            throw new RuntimeException("Une famille avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une famille avec ce code existe déjà."
+            );
         }
 
         FamilleProduit familleProduit = familleProduitMapper.toEntity(requestDTO);
@@ -38,11 +42,15 @@ public class FamilleProduitServiceImpl implements FamilleProduitService {
     public FamilleProduitResponseDTO update(Long id, FamilleProduitRequestDTO requestDTO) {
 
         FamilleProduit familleProduit = familleProduitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Famille produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Famille produit introuvable."
+                ));
 
         if (!familleProduit.getCodeFamille().equals(requestDTO.getCodeFamille())
                 && familleProduitRepository.existsByCodeFamille(requestDTO.getCodeFamille())) {
-            throw new RuntimeException("Une famille avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une famille avec ce code existe déjà."
+            );
         }
 
         familleProduitMapper.updateEntityFromDto(requestDTO, familleProduit);
@@ -57,7 +65,9 @@ public class FamilleProduitServiceImpl implements FamilleProduitService {
     public FamilleProduitResponseDTO getById(Long id) {
 
         FamilleProduit familleProduit = familleProduitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Famille produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Famille produit introuvable."
+                ));
 
         return familleProduitMapper.toResponseDTO(familleProduit);
     }
@@ -76,7 +86,9 @@ public class FamilleProduitServiceImpl implements FamilleProduitService {
     public void delete(Long id) {
 
         FamilleProduit familleProduit = familleProduitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Famille produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Famille produit introuvable."
+                ));
 
         familleProduitRepository.delete(familleProduit);
     }

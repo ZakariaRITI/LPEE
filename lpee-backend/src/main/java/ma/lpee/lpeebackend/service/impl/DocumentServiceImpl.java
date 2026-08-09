@@ -5,6 +5,8 @@ import ma.lpee.lpeebackend.dto.request.DocumentRequestDTO;
 import ma.lpee.lpeebackend.dto.response.DocumentResponseDTO;
 import ma.lpee.lpeebackend.entity.Document;
 import ma.lpee.lpeebackend.entity.TypeDocument;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.DocumentMapper;
 import ma.lpee.lpeebackend.repository.DocumentRepository;
 import ma.lpee.lpeebackend.repository.TypeDocumentRepository;
@@ -27,10 +29,10 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentResponseDTO create(DocumentRequestDTO requestDTO) {
 
         TypeDocument typeDocument = typeDocumentRepository.findById(requestDTO.getIdType())
-                .orElseThrow(() -> new RuntimeException("Type de document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Type de document introuvable."));
 
         if (documentRepository.existsByNumeroDocument(requestDTO.getNumeroDocument())) {
-            throw new RuntimeException("Un document avec ce numéro existe déjà.");
+            throw new DuplicateResourceException("Un document avec ce numéro existe déjà.");
         }
 
         Document document = documentMapper.toEntity(requestDTO);
@@ -45,15 +47,15 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentResponseDTO update(Long id, DocumentRequestDTO requestDTO) {
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Document introuvable."));
 
         TypeDocument typeDocument = typeDocumentRepository.findById(requestDTO.getIdType())
-                .orElseThrow(() -> new RuntimeException("Type de document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Type de document introuvable."));
 
         documentRepository.findByNumeroDocument(requestDTO.getNumeroDocument())
                 .ifPresent(existingDocument -> {
                     if (!existingDocument.getIdDocument().equals(id)) {
-                        throw new RuntimeException("Un document avec ce numéro existe déjà.");
+                        throw new DuplicateResourceException("Un document avec ce numéro existe déjà.");
                     }
                 });
 
@@ -70,7 +72,7 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentResponseDTO getById(Long id) {
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Document introuvable."));
 
         return documentMapper.toResponseDTO(document);
     }
@@ -99,7 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
     public void delete(Long id) {
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Document introuvable."));
 
         documentRepository.delete(document);
     }

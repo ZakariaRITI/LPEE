@@ -7,6 +7,7 @@ import ma.lpee.lpeebackend.service.UtilisateurService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class UtilisateurController {
 
     @PostMapping
     public ResponseEntity<UtilisateurResponseDTO> create(
-            @RequestBody UtilisateurRequestDTO dto) {
+            @Valid @RequestBody UtilisateurRequestDTO dto) {
 
         return new ResponseEntity<>(
                 utilisateurService.create(dto),
@@ -51,7 +52,7 @@ public class UtilisateurController {
     @PutMapping("/{id}")
     public ResponseEntity<UtilisateurResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody UtilisateurRequestDTO dto) {
+            @Valid @RequestBody UtilisateurRequestDTO dto) {
 
         return ResponseEntity.ok(
                 utilisateurService.update(id, dto)

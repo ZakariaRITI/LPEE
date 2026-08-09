@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.TypeDocumentRequestDTO;
 import ma.lpee.lpeebackend.dto.response.TypeDocumentResponseDTO;
 import ma.lpee.lpeebackend.entity.TypeDocument;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.TypeDocumentMapper;
 import ma.lpee.lpeebackend.repository.TypeDocumentRepository;
 import ma.lpee.lpeebackend.service.TypeDocumentService;
@@ -35,7 +36,7 @@ public class TypeDocumentServiceImpl implements TypeDocumentService {
     public TypeDocumentResponseDTO findById(Long id) {
 
         TypeDocument entity = typeDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Type de document introuvable avec l'id : " + id
                 ));
 
@@ -58,7 +59,7 @@ public class TypeDocumentServiceImpl implements TypeDocumentService {
             TypeDocumentRequestDTO dto) {
 
         TypeDocument entity = typeDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Type de document introuvable avec l'id : " + id
                 ));
 
@@ -74,7 +75,7 @@ public class TypeDocumentServiceImpl implements TypeDocumentService {
     public void delete(Long id) {
 
         TypeDocument entity = typeDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Type de document introuvable avec l'id : " + id
                 ));
 
@@ -86,7 +87,7 @@ public class TypeDocumentServiceImpl implements TypeDocumentService {
     public TypeDocumentResponseDTO findByNomType(String nomType) {
 
         TypeDocument entity = typeDocumentRepository.findByNomType(nomType)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Type de document introuvable avec le nom : " + nomType
                 ));
 

@@ -7,6 +7,7 @@ import ma.lpee.lpeebackend.service.TypeDocumentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class TypeDocumentController {
 
     @PostMapping
     public ResponseEntity<TypeDocumentResponseDTO> create(
-            @RequestBody TypeDocumentRequestDTO dto) {
+            @Valid @RequestBody TypeDocumentRequestDTO dto) {
 
         return new ResponseEntity<>(
                 typeDocumentService.create(dto),
@@ -51,7 +52,7 @@ public class TypeDocumentController {
     @PutMapping("/{id}")
     public ResponseEntity<TypeDocumentResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody TypeDocumentRequestDTO dto) {
+            @Valid @RequestBody TypeDocumentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 typeDocumentService.update(id, dto)

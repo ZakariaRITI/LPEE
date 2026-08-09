@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.UniteRequestDTO;
 import ma.lpee.lpeebackend.dto.response.UniteResponseDTO;
 import ma.lpee.lpeebackend.entity.Unite;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.UniteMapper;
 import ma.lpee.lpeebackend.repository.RegionRepository;
 import ma.lpee.lpeebackend.repository.UniteRepository;
@@ -26,13 +28,13 @@ public class UniteServiceImpl implements UniteService {
     public UniteResponseDTO create(UniteRequestDTO dto) {
 
         if (uniteRepository.existsByCodeUnite(dto.getCodeUnite())) {
-            throw new IllegalArgumentException(
+            throw new DuplicateResourceException(
                     "Une unité avec le code '" + dto.getCodeUnite() + "' existe déjà"
             );
         }
 
         if (!regionRepository.existsById(dto.getIdRegion())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "La région avec l'ID " + dto.getIdRegion() + " n'existe pas"
             );
         }
@@ -49,7 +51,7 @@ public class UniteServiceImpl implements UniteService {
     public UniteResponseDTO getById(Long id) {
 
         Unite entity = uniteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Unité introuvable avec l'ID " + id
                 ));
 
@@ -70,20 +72,20 @@ public class UniteServiceImpl implements UniteService {
     public UniteResponseDTO update(Long id, UniteRequestDTO dto) {
 
         Unite entity = uniteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Unité introuvable avec l'ID " + id
                 ));
 
         if (!entity.getCodeUnite().equals(dto.getCodeUnite())
                 && uniteRepository.existsByCodeUnite(dto.getCodeUnite())) {
 
-            throw new IllegalArgumentException(
+            throw new DuplicateResourceException(
                     "Une unité avec le code '" + dto.getCodeUnite() + "' existe déjà"
             );
         }
 
         if (!regionRepository.existsById(dto.getIdRegion())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "La région avec l'ID " + dto.getIdRegion() + " n'existe pas"
             );
         }
@@ -99,7 +101,7 @@ public class UniteServiceImpl implements UniteService {
     public void delete(Long id) {
 
         if (!uniteRepository.existsById(id)) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "Unité introuvable avec l'ID " + id
             );
         }
@@ -112,7 +114,7 @@ public class UniteServiceImpl implements UniteService {
     public List<UniteResponseDTO> getByRegion(Long idRegion) {
 
         if (!regionRepository.existsById(idRegion)) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "La région avec l'ID " + idRegion + " n'existe pas"
             );
         }
@@ -128,11 +130,10 @@ public class UniteServiceImpl implements UniteService {
     public UniteResponseDTO getByCodeUnite(String codeUnite) {
 
         Unite entity = uniteRepository.findByCodeUnite(codeUnite)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Unité introuvable avec le code '" + codeUnite + "'"
                 ));
 
         return uniteMapper.toResponseDTO(entity);
     }
 }
-

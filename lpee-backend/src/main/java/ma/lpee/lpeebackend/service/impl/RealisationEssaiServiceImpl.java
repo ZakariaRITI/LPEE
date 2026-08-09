@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.RealisationEssaiRequestDTO;
 import ma.lpee.lpeebackend.dto.response.RealisationEssaiResponseDTO;
 import ma.lpee.lpeebackend.entity.RealisationEssai;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.RealisationEssaiMapper;
 import ma.lpee.lpeebackend.repository.RealisationEssaiRepository;
 import ma.lpee.lpeebackend.service.RealisationEssaiService;
@@ -38,7 +39,7 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
     public RealisationEssaiResponseDTO findById(Long id) {
 
         RealisationEssai entity = realisationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Réalisation d'essai introuvable avec l'id : " + id
                 ));
 
@@ -61,7 +62,7 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
             RealisationEssaiRequestDTO dto) {
 
         RealisationEssai entity = realisationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Réalisation d'essai introuvable avec l'id : " + id
                 ));
 
@@ -79,7 +80,7 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
     public void delete(Long id) {
 
         RealisationEssai entity = realisationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Réalisation d'essai introuvable avec l'id : " + id
                 ));
 

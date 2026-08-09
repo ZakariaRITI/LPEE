@@ -7,6 +7,7 @@ import ma.lpee.lpeebackend.service.UniteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class UniteController {
 
     @PostMapping
     public ResponseEntity<UniteResponseDTO> create(
-            @RequestBody UniteRequestDTO dto) {
+            @Valid @RequestBody UniteRequestDTO dto) {
 
         return new ResponseEntity<>(
                 uniteService.create(dto),
@@ -51,7 +52,7 @@ public class UniteController {
     @PutMapping("/{id}")
     public ResponseEntity<UniteResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody UniteRequestDTO dto) {
+            @Valid @RequestBody UniteRequestDTO dto) {
 
         return ResponseEntity.ok(
                 uniteService.update(id, dto)

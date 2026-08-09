@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.NormeRequestDTO;
 import ma.lpee.lpeebackend.dto.response.NormeResponseDTO;
 import ma.lpee.lpeebackend.entity.Norme;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.NormeMapper;
 import ma.lpee.lpeebackend.repository.NormeRepository;
 import ma.lpee.lpeebackend.service.NormeService;
@@ -24,11 +26,15 @@ public class NormeServiceImpl implements NormeService {
     public NormeResponseDTO create(NormeRequestDTO requestDTO) {
 
         if (normeRepository.findByNumeroNorme(requestDTO.getNumeroNorme()).isPresent()) {
-            throw new RuntimeException("Une norme avec ce numéro existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une norme avec ce numéro existe déjà."
+            );
         }
 
         if (normeRepository.existsByCodeNorme(requestDTO.getCodeNorme())) {
-            throw new RuntimeException("Une norme avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une norme avec ce code existe déjà."
+            );
         }
 
         Norme norme = normeMapper.toEntity(requestDTO);
@@ -42,16 +48,22 @@ public class NormeServiceImpl implements NormeService {
     public NormeResponseDTO update(Long id, NormeRequestDTO requestDTO) {
 
         Norme norme = normeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Norme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Norme introuvable."
+                ));
 
         if (!norme.getNumeroNorme().equals(requestDTO.getNumeroNorme())
                 && normeRepository.findByNumeroNorme(requestDTO.getNumeroNorme()).isPresent()) {
-            throw new RuntimeException("Une norme avec ce numéro existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une norme avec ce numéro existe déjà."
+            );
         }
 
         if (!norme.getCodeNorme().equals(requestDTO.getCodeNorme())
                 && normeRepository.existsByCodeNorme(requestDTO.getCodeNorme())) {
-            throw new RuntimeException("Une norme avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une norme avec ce code existe déjà."
+            );
         }
 
         normeMapper.updateEntityFromDto(requestDTO, norme);
@@ -66,7 +78,9 @@ public class NormeServiceImpl implements NormeService {
     public NormeResponseDTO getById(Long id) {
 
         Norme norme = normeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Norme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Norme introuvable."
+                ));
 
         return normeMapper.toResponseDTO(norme);
     }
@@ -85,7 +99,9 @@ public class NormeServiceImpl implements NormeService {
     public void delete(Long id) {
 
         Norme norme = normeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Norme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Norme introuvable."
+                ));
 
         normeRepository.delete(norme);
     }

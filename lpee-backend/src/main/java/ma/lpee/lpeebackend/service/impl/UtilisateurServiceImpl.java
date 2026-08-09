@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.UtilisateurRequestDTO;
 import ma.lpee.lpeebackend.dto.response.UtilisateurResponseDTO;
 import ma.lpee.lpeebackend.entity.Utilisateur;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.UtilisateurMapper;
 import ma.lpee.lpeebackend.repository.RoleRepository;
 import ma.lpee.lpeebackend.repository.UniteRepository;
@@ -28,19 +30,19 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public UtilisateurResponseDTO create(UtilisateurRequestDTO dto) {
 
         if (utilisateurRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException(
+            throw new DuplicateResourceException(
                     "Un utilisateur avec l'email '" + dto.getEmail() + "' existe déjà"
             );
         }
 
         if (!roleRepository.existsById(dto.getIdRole())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "Le rôle avec l'ID " + dto.getIdRole() + " n'existe pas"
             );
         }
 
         if (!uniteRepository.existsById(dto.getIdUnite())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "L'unité avec l'ID " + dto.getIdUnite() + " n'existe pas"
             );
         }
@@ -57,7 +59,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public UtilisateurResponseDTO getById(Long id) {
 
         Utilisateur entity = utilisateurRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Utilisateur introuvable avec l'ID " + id
                 ));
 
@@ -78,26 +80,26 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public UtilisateurResponseDTO update(Long id, UtilisateurRequestDTO dto) {
 
         Utilisateur entity = utilisateurRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Utilisateur introuvable avec l'ID " + id
                 ));
 
         if (!entity.getEmail().equals(dto.getEmail())
                 && utilisateurRepository.existsByEmail(dto.getEmail())) {
 
-            throw new IllegalArgumentException(
+            throw new DuplicateResourceException(
                     "Un utilisateur avec l'email '" + dto.getEmail() + "' existe déjà"
             );
         }
 
         if (!roleRepository.existsById(dto.getIdRole())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "Le rôle avec l'ID " + dto.getIdRole() + " n'existe pas"
             );
         }
 
         if (!uniteRepository.existsById(dto.getIdUnite())) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "L'unité avec l'ID " + dto.getIdUnite() + " n'existe pas"
             );
         }
@@ -113,7 +115,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public void delete(Long id) {
 
         if (!utilisateurRepository.existsById(id)) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "Utilisateur introuvable avec l'ID " + id
             );
         }
@@ -126,7 +128,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public List<UtilisateurResponseDTO> getByUnite(Long idUnite) {
 
         if (!uniteRepository.existsById(idUnite)) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "L'unité avec l'ID " + idUnite + " n'existe pas"
             );
         }
@@ -142,7 +144,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public List<UtilisateurResponseDTO> getByRole(Long idRole) {
 
         if (!roleRepository.existsById(idRole)) {
-            throw new IllegalArgumentException(
+            throw new ResourceNotFoundException(
                     "Le rôle avec l'ID " + idRole + " n'existe pas"
             );
         }
@@ -158,7 +160,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     public UtilisateurResponseDTO getByEmail(String email) {
 
         Utilisateur entity = utilisateurRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Utilisateur introuvable avec l'email '" + email + "'"
                 ));
 

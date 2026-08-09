@@ -6,6 +6,8 @@ import ma.lpee.lpeebackend.dto.response.DocumentationEssaiResponseDTO;
 import ma.lpee.lpeebackend.entity.Document;
 import ma.lpee.lpeebackend.entity.DocumentationEssai;
 import ma.lpee.lpeebackend.entity.Essai;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.DocumentationEssaiMapper;
 import ma.lpee.lpeebackend.repository.DocumentRepository;
 import ma.lpee.lpeebackend.repository.DocumentationEssaiRepository;
@@ -31,15 +33,15 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
     public DocumentationEssaiResponseDTO create(DocumentationEssaiRequestDTO requestDTO) {
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Document document = documentRepository.findById(requestDTO.getIdDocument())
-                .orElseThrow(() -> new RuntimeException("Document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Document introuvable."));
 
         if (documentationEssaiRepository.existsByEssaiIdEssaiAndDocumentIdDocument(
                 requestDTO.getIdEssai(),
                 requestDTO.getIdDocument())) {
-            throw new RuntimeException("Cette documentation d'essai existe déjà.");
+            throw new DuplicateResourceException("Cette documentation d'essai existe déjà.");
         }
 
         DocumentationEssai documentationEssai = documentationEssaiMapper.toEntity(requestDTO);
@@ -57,13 +59,13 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
     public DocumentationEssaiResponseDTO update(Long id, DocumentationEssaiRequestDTO requestDTO) {
 
         DocumentationEssai documentationEssai = documentationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documentation d'essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Documentation d'essai introuvable."));
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Document document = documentRepository.findById(requestDTO.getIdDocument())
-                .orElseThrow(() -> new RuntimeException("Document introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Document introuvable."));
 
         documentationEssaiMapper.updateEntityFromDto(requestDTO, documentationEssai);
 
@@ -81,7 +83,7 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
     public DocumentationEssaiResponseDTO getById(Long id) {
 
         DocumentationEssai documentationEssai = documentationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documentation d'essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Documentation d'essai introuvable."));
 
         return documentationEssaiMapper.toResponseDTO(documentationEssai);
     }
@@ -120,7 +122,7 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
     public void delete(Long id) {
 
         DocumentationEssai documentationEssai = documentationEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documentation d'essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Documentation d'essai introuvable."));
 
         documentationEssaiRepository.delete(documentationEssai);
     }

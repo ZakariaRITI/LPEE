@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.PublicationNormeRequestDTO;
 import ma.lpee.lpeebackend.dto.response.PublicationNormeResponseDTO;
 import ma.lpee.lpeebackend.entity.PublicationNorme;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.PublicationNormeMapper;
 import ma.lpee.lpeebackend.repository.PublicationNormeRepository;
 import ma.lpee.lpeebackend.service.PublicationNormeService;
@@ -38,7 +39,7 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
     public PublicationNormeResponseDTO findById(Long id) {
 
         PublicationNorme entity = publicationNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "PublicationNorme introuvable avec l'id : " + id
                 ));
 
@@ -61,7 +62,7 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
             PublicationNormeRequestDTO dto) {
 
         PublicationNorme entity = publicationNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "PublicationNorme introuvable avec l'id : " + id
                 ));
 
@@ -79,7 +80,7 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
     public void delete(Long id) {
 
         PublicationNorme entity = publicationNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "PublicationNorme introuvable avec l'id : " + id
                 ));
 

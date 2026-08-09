@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.ParametreRequestDTO;
 import ma.lpee.lpeebackend.dto.response.ParametreResponseDTO;
 import ma.lpee.lpeebackend.entity.Parametre;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.ParametreMapper;
 import ma.lpee.lpeebackend.repository.ParametreRepository;
 import ma.lpee.lpeebackend.service.ParametreService;
@@ -24,7 +26,9 @@ public class ParametreServiceImpl implements ParametreService {
     public ParametreResponseDTO create(ParametreRequestDTO requestDTO) {
 
         if (parametreRepository.existsByNomParametre(requestDTO.getNomParametre())) {
-            throw new RuntimeException("Un paramètre avec ce nom existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un paramètre avec ce nom existe déjà."
+            );
         }
 
         Parametre parametre = parametreMapper.toEntity(requestDTO);
@@ -38,11 +42,15 @@ public class ParametreServiceImpl implements ParametreService {
     public ParametreResponseDTO update(Long id, ParametreRequestDTO requestDTO) {
 
         Parametre parametre = parametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Paramètre introuvable."
+                ));
 
         if (!parametre.getNomParametre().equals(requestDTO.getNomParametre())
                 && parametreRepository.existsByNomParametre(requestDTO.getNomParametre())) {
-            throw new RuntimeException("Un paramètre avec ce nom existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un paramètre avec ce nom existe déjà."
+            );
         }
 
         parametreMapper.updateEntityFromDto(requestDTO, parametre);
@@ -57,7 +65,9 @@ public class ParametreServiceImpl implements ParametreService {
     public ParametreResponseDTO getById(Long id) {
 
         Parametre parametre = parametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Paramètre introuvable."
+                ));
 
         return parametreMapper.toResponseDTO(parametre);
     }
@@ -76,7 +86,9 @@ public class ParametreServiceImpl implements ParametreService {
     public void delete(Long id) {
 
         Parametre parametre = parametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Paramètre introuvable."
+                ));
 
         parametreRepository.delete(parametre);
     }

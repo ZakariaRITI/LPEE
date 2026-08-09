@@ -5,6 +5,8 @@ import ma.lpee.lpeebackend.dto.request.ProduitRequestDTO;
 import ma.lpee.lpeebackend.dto.response.ProduitResponseDTO;
 import ma.lpee.lpeebackend.entity.FamilleProduit;
 import ma.lpee.lpeebackend.entity.Produit;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.ProduitMapper;
 import ma.lpee.lpeebackend.repository.FamilleProduitRepository;
 import ma.lpee.lpeebackend.repository.ProduitRepository;
@@ -27,10 +29,14 @@ public class ProduitServiceImpl implements ProduitService {
     public ProduitResponseDTO create(ProduitRequestDTO requestDTO) {
 
         FamilleProduit familleProduit = familleProduitRepository.findById(requestDTO.getIdFamille())
-                .orElseThrow(() -> new RuntimeException("Famille produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Famille produit introuvable."
+                ));
 
         if (produitRepository.existsByCodeProduit(requestDTO.getCodeProduit())) {
-            throw new RuntimeException("Un produit avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un produit avec ce code existe déjà."
+            );
         }
 
         Produit produit = produitMapper.toEntity(requestDTO);
@@ -45,14 +51,20 @@ public class ProduitServiceImpl implements ProduitService {
     public ProduitResponseDTO update(Long id, ProduitRequestDTO requestDTO) {
 
         Produit produit = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Produit introuvable."
+                ));
 
         FamilleProduit familleProduit = familleProduitRepository.findById(requestDTO.getIdFamille())
-                .orElseThrow(() -> new RuntimeException("Famille produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Famille produit introuvable."
+                ));
 
         if (!produit.getCodeProduit().equals(requestDTO.getCodeProduit())
                 && produitRepository.existsByCodeProduit(requestDTO.getCodeProduit())) {
-            throw new RuntimeException("Un produit avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un produit avec ce code existe déjà."
+            );
         }
 
         produitMapper.updateEntityFromDto(requestDTO, produit);
@@ -68,7 +80,9 @@ public class ProduitServiceImpl implements ProduitService {
     public ProduitResponseDTO getById(Long id) {
 
         Produit produit = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Produit introuvable."
+                ));
 
         return produitMapper.toResponseDTO(produit);
     }
@@ -97,7 +111,9 @@ public class ProduitServiceImpl implements ProduitService {
     public void delete(Long id) {
 
         Produit produit = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Produit introuvable."
+                ));
 
         produitRepository.delete(produit);
     }

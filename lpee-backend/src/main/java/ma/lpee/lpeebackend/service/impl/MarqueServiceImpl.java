@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.MarqueRequestDTO;
 import ma.lpee.lpeebackend.dto.response.MarqueResponseDTO;
 import ma.lpee.lpeebackend.entity.Marque;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.MarqueMapper;
 import ma.lpee.lpeebackend.repository.MarqueRepository;
 import ma.lpee.lpeebackend.service.MarqueService;
@@ -24,7 +26,9 @@ public class MarqueServiceImpl implements MarqueService {
     public MarqueResponseDTO create(MarqueRequestDTO requestDTO) {
 
         if (marqueRepository.existsByNomMarque(requestDTO.getNomMarque())) {
-            throw new RuntimeException("Une marque avec ce nom existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une marque avec ce nom existe déjà."
+            );
         }
 
         Marque marque = marqueMapper.toEntity(requestDTO);
@@ -38,11 +42,15 @@ public class MarqueServiceImpl implements MarqueService {
     public MarqueResponseDTO update(Long id, MarqueRequestDTO requestDTO) {
 
         Marque marque = marqueRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Marque introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Marque introuvable."
+                ));
 
         if (!marque.getNomMarque().equals(requestDTO.getNomMarque())
                 && marqueRepository.existsByNomMarque(requestDTO.getNomMarque())) {
-            throw new RuntimeException("Une marque avec ce nom existe déjà.");
+            throw new DuplicateResourceException(
+                    "Une marque avec ce nom existe déjà."
+            );
         }
 
         marqueMapper.updateEntityFromDto(requestDTO, marque);
@@ -57,7 +65,9 @@ public class MarqueServiceImpl implements MarqueService {
     public MarqueResponseDTO getById(Long id) {
 
         Marque marque = marqueRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Marque introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Marque introuvable."
+                ));
 
         return marqueMapper.toResponseDTO(marque);
     }
@@ -76,7 +86,9 @@ public class MarqueServiceImpl implements MarqueService {
     public void delete(Long id) {
 
         Marque marque = marqueRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Marque introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Marque introuvable."
+                ));
 
         marqueRepository.delete(marque);
     }

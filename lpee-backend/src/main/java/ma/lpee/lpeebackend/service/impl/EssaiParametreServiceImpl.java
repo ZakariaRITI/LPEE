@@ -6,6 +6,8 @@ import ma.lpee.lpeebackend.dto.response.EssaiParametreResponseDTO;
 import ma.lpee.lpeebackend.entity.Essai;
 import ma.lpee.lpeebackend.entity.EssaiParametre;
 import ma.lpee.lpeebackend.entity.Parametre;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.EssaiParametreMapper;
 import ma.lpee.lpeebackend.repository.EssaiParametreRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
@@ -31,15 +33,17 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     public EssaiParametreResponseDTO create(EssaiParametreRequestDTO requestDTO) {
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Parametre parametre = parametreRepository.findById(requestDTO.getIdParametre())
-                .orElseThrow(() -> new RuntimeException("Paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Paramètre introuvable."));
 
         if (essaiParametreRepository.existsByEssaiIdEssaiAndParametreIdParametre(
                 requestDTO.getIdEssai(),
                 requestDTO.getIdParametre())) {
-            throw new RuntimeException("Cette association essai-paramètre existe déjà.");
+            throw new DuplicateResourceException(
+                    "Cette association essai-paramètre existe déjà."
+            );
         }
 
         EssaiParametre essaiParametre = essaiParametreMapper.toEntity(requestDTO);
@@ -57,13 +61,15 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     public EssaiParametreResponseDTO update(Long id, EssaiParametreRequestDTO requestDTO) {
 
         EssaiParametre essaiParametre = essaiParametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Association essai-paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Association essai-paramètre introuvable."
+                ));
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Parametre parametre = parametreRepository.findById(requestDTO.getIdParametre())
-                .orElseThrow(() -> new RuntimeException("Paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Paramètre introuvable."));
 
         essaiParametreMapper.updateEntityFromDto(requestDTO, essaiParametre);
 
@@ -81,7 +87,9 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     public EssaiParametreResponseDTO getById(Long id) {
 
         EssaiParametre essaiParametre = essaiParametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Association essai-paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Association essai-paramètre introuvable."
+                ));
 
         return essaiParametreMapper.toResponseDTO(essaiParametre);
     }
@@ -120,7 +128,9 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     public void delete(Long id) {
 
         EssaiParametre essaiParametre = essaiParametreRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Association essai-paramètre introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Association essai-paramètre introuvable."
+                ));
 
         essaiParametreRepository.delete(essaiParametre);
     }

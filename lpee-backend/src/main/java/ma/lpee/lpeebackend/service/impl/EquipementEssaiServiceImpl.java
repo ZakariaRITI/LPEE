@@ -6,6 +6,8 @@ import ma.lpee.lpeebackend.dto.response.EquipementEssaiResponseDTO;
 import ma.lpee.lpeebackend.entity.Equipement;
 import ma.lpee.lpeebackend.entity.EquipementEssai;
 import ma.lpee.lpeebackend.entity.Essai;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.EquipementEssaiMapper;
 import ma.lpee.lpeebackend.repository.EquipementEssaiRepository;
 import ma.lpee.lpeebackend.repository.EquipementRepository;
@@ -31,15 +33,15 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     public EquipementEssaiResponseDTO create(EquipementEssaiRequestDTO requestDTO) {
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Equipement equipement = equipementRepository.findById(requestDTO.getIdEquipement())
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable."));
 
         if (equipementEssaiRepository.existsByEssaiIdEssaiAndEquipementIdEquipement(
                 requestDTO.getIdEssai(),
                 requestDTO.getIdEquipement())) {
-            throw new RuntimeException("Cette utilisation d'équipement existe déjà.");
+            throw new DuplicateResourceException("Cette utilisation d'équipement existe déjà.");
         }
 
         EquipementEssai equipementEssai = equipementEssaiMapper.toEntity(requestDTO);
@@ -57,13 +59,13 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     public EquipementEssaiResponseDTO update(Long id, EquipementEssaiRequestDTO requestDTO) {
 
         EquipementEssai equipementEssai = equipementEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisation d'équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisation d'équipement introuvable."));
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Equipement equipement = equipementRepository.findById(requestDTO.getIdEquipement())
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable."));
 
         equipementEssaiMapper.updateEntityFromDto(requestDTO, equipementEssai);
 
@@ -81,7 +83,7 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     public EquipementEssaiResponseDTO getById(Long id) {
 
         EquipementEssai equipementEssai = equipementEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisation d'équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisation d'équipement introuvable."));
 
         return equipementEssaiMapper.toResponseDTO(equipementEssai);
     }
@@ -120,7 +122,7 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     public void delete(Long id) {
 
         EquipementEssai equipementEssai = equipementEssaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisation d'équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisation d'équipement introuvable."));
 
         equipementEssaiRepository.delete(equipementEssai);
     }

@@ -5,6 +5,8 @@ import ma.lpee.lpeebackend.dto.request.EquipementRequestDTO;
 import ma.lpee.lpeebackend.dto.response.EquipementResponseDTO;
 import ma.lpee.lpeebackend.entity.Equipement;
 import ma.lpee.lpeebackend.entity.Marque;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.EquipementMapper;
 import ma.lpee.lpeebackend.repository.EquipementRepository;
 import ma.lpee.lpeebackend.repository.MarqueRepository;
@@ -27,10 +29,12 @@ public class EquipementServiceImpl implements EquipementService {
     public EquipementResponseDTO create(EquipementRequestDTO requestDTO) {
 
         Marque marque = marqueRepository.findById(requestDTO.getIdMarque())
-                .orElseThrow(() -> new RuntimeException("Marque introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Marque introuvable."));
 
         if (equipementRepository.existsByNumeroSerie(requestDTO.getNumeroSerie())) {
-            throw new RuntimeException("Un équipement avec ce numéro de série existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un équipement avec ce numéro de série existe déjà."
+            );
         }
 
         Equipement equipement = equipementMapper.toEntity(requestDTO);
@@ -45,14 +49,16 @@ public class EquipementServiceImpl implements EquipementService {
     public EquipementResponseDTO update(Long id, EquipementRequestDTO requestDTO) {
 
         Equipement equipement = equipementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable."));
 
         Marque marque = marqueRepository.findById(requestDTO.getIdMarque())
-                .orElseThrow(() -> new RuntimeException("Marque introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Marque introuvable."));
 
         if (!equipement.getNumeroSerie().equals(requestDTO.getNumeroSerie())
                 && equipementRepository.existsByNumeroSerie(requestDTO.getNumeroSerie())) {
-            throw new RuntimeException("Un équipement avec ce numéro de série existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un équipement avec ce numéro de série existe déjà."
+            );
         }
 
         equipementMapper.updateEntityFromDto(requestDTO, equipement);
@@ -68,7 +74,7 @@ public class EquipementServiceImpl implements EquipementService {
     public EquipementResponseDTO getById(Long id) {
 
         Equipement equipement = equipementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable."));
 
         return equipementMapper.toResponseDTO(equipement);
     }
@@ -97,7 +103,7 @@ public class EquipementServiceImpl implements EquipementService {
     public void delete(Long id) {
 
         Equipement equipement = equipementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Équipement introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Équipement introuvable."));
 
         equipementRepository.delete(equipement);
     }

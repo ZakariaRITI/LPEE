@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.RoleRequestDTO;
 import ma.lpee.lpeebackend.dto.response.RoleResponseDTO;
 import ma.lpee.lpeebackend.entity.Role;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.RoleMapper;
 import ma.lpee.lpeebackend.repository.RoleRepository;
 import ma.lpee.lpeebackend.service.RoleService;
@@ -35,7 +36,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponseDTO findById(Long id) {
 
         Role entity = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Rôle introuvable avec l'id : " + id
                 ));
 
@@ -56,7 +57,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponseDTO update(Long id, RoleRequestDTO dto) {
 
         Role entity = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Rôle introuvable avec l'id : " + id
                 ));
 
@@ -71,7 +72,7 @@ public class RoleServiceImpl implements RoleService {
     public void delete(Long id) {
 
         Role entity = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Rôle introuvable avec l'id : " + id
                 ));
 
@@ -83,7 +84,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponseDTO findByCodeRole(String codeRole) {
 
         Role entity = roleRepository.findByCodeRole(codeRole)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Rôle introuvable avec le code : " + codeRole
                 ));
 

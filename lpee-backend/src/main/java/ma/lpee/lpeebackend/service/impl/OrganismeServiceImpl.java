@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.OrganismeRequestDTO;
 import ma.lpee.lpeebackend.dto.response.OrganismeResponseDTO;
 import ma.lpee.lpeebackend.entity.Organisme;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.OrganismeMapper;
 import ma.lpee.lpeebackend.repository.OrganismeRepository;
 import ma.lpee.lpeebackend.service.OrganismeService;
@@ -24,7 +26,9 @@ public class OrganismeServiceImpl implements OrganismeService {
     public OrganismeResponseDTO create(OrganismeRequestDTO requestDTO) {
 
         if (organismeRepository.existsByCodeOrganisme(requestDTO.getCodeOrganisme())) {
-            throw new RuntimeException("Un organisme avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un organisme avec ce code existe déjà."
+            );
         }
 
         Organisme organisme = organismeMapper.toEntity(requestDTO);
@@ -38,11 +42,15 @@ public class OrganismeServiceImpl implements OrganismeService {
     public OrganismeResponseDTO update(Long id, OrganismeRequestDTO requestDTO) {
 
         Organisme organisme = organismeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organisme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organisme introuvable."
+                ));
 
         if (!organisme.getCodeOrganisme().equals(requestDTO.getCodeOrganisme())
                 && organismeRepository.existsByCodeOrganisme(requestDTO.getCodeOrganisme())) {
-            throw new RuntimeException("Un organisme avec ce code existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un organisme avec ce code existe déjà."
+            );
         }
 
         organismeMapper.updateEntityFromDto(requestDTO, organisme);
@@ -57,7 +65,9 @@ public class OrganismeServiceImpl implements OrganismeService {
     public OrganismeResponseDTO getById(Long id) {
 
         Organisme organisme = organismeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organisme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organisme introuvable."
+                ));
 
         return organismeMapper.toResponseDTO(organisme);
     }
@@ -76,7 +86,9 @@ public class OrganismeServiceImpl implements OrganismeService {
     public void delete(Long id) {
 
         Organisme organisme = organismeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organisme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organisme introuvable."
+                ));
 
         organismeRepository.delete(organisme);
     }

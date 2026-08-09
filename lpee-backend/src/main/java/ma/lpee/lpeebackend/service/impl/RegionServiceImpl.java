@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.RegionRequestDTO;
 import ma.lpee.lpeebackend.dto.response.RegionResponseDTO;
 import ma.lpee.lpeebackend.entity.Region;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.RegionMapper;
 import ma.lpee.lpeebackend.repository.RegionRepository;
 import ma.lpee.lpeebackend.service.RegionService;
@@ -35,7 +36,7 @@ public class RegionServiceImpl implements RegionService {
     public RegionResponseDTO findById(Long id) {
 
         Region entity = regionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Région introuvable avec l'id : " + id
                 ));
 
@@ -56,7 +57,7 @@ public class RegionServiceImpl implements RegionService {
     public RegionResponseDTO update(Long id, RegionRequestDTO dto) {
 
         Region entity = regionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Région introuvable avec l'id : " + id
                 ));
 
@@ -71,7 +72,7 @@ public class RegionServiceImpl implements RegionService {
     public void delete(Long id) {
 
         Region entity = regionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Région introuvable avec l'id : " + id
                 ));
 
@@ -83,7 +84,7 @@ public class RegionServiceImpl implements RegionService {
     public RegionResponseDTO findByCodeRegion(String codeRegion) {
 
         Region entity = regionRepository.findByCodeRegion(codeRegion)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Région introuvable avec le code : " + codeRegion
                 ));
 

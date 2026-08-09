@@ -6,6 +6,8 @@ import ma.lpee.lpeebackend.dto.response.ConformiteNormeResponseDTO;
 import ma.lpee.lpeebackend.entity.ConformiteNorme;
 import ma.lpee.lpeebackend.entity.Essai;
 import ma.lpee.lpeebackend.entity.Norme;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.ConformiteNormeMapper;
 import ma.lpee.lpeebackend.repository.ConformiteNormeRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
@@ -31,15 +33,15 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
     public ConformiteNormeResponseDTO create(ConformiteNormeRequestDTO requestDTO) {
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Norme norme = normeRepository.findById(requestDTO.getIdNorme())
-                .orElseThrow(() -> new RuntimeException("Norme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Norme introuvable."));
 
         if (conformiteNormeRepository.existsByEssaiIdEssaiAndNormeIdNorme(
                 requestDTO.getIdEssai(),
                 requestDTO.getIdNorme())) {
-            throw new RuntimeException("Cette conformité existe déjà.");
+            throw new DuplicateResourceException("Cette conformité existe déjà.");
         }
 
         ConformiteNorme conformiteNorme = conformiteNormeMapper.toEntity(requestDTO);
@@ -57,13 +59,13 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
     public ConformiteNormeResponseDTO update(Long id, ConformiteNormeRequestDTO requestDTO) {
 
         ConformiteNorme conformiteNorme = conformiteNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conformité introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Conformité introuvable."));
 
         Essai essai = essaiRepository.findById(requestDTO.getIdEssai())
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Norme norme = normeRepository.findById(requestDTO.getIdNorme())
-                .orElseThrow(() -> new RuntimeException("Norme introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Norme introuvable."));
 
         conformiteNormeMapper.updateEntityFromDto(requestDTO, conformiteNorme);
 
@@ -81,7 +83,7 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
     public ConformiteNormeResponseDTO getById(Long id) {
 
         ConformiteNorme conformiteNorme = conformiteNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conformité introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Conformité introuvable."));
 
         return conformiteNormeMapper.toResponseDTO(conformiteNorme);
     }
@@ -120,7 +122,7 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
     public void delete(Long id) {
 
         ConformiteNorme conformiteNorme = conformiteNormeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conformité introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Conformité introuvable."));
 
         conformiteNormeRepository.delete(conformiteNorme);
     }

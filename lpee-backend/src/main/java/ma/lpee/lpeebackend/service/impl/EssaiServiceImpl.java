@@ -5,6 +5,8 @@ import ma.lpee.lpeebackend.dto.request.EssaiRequestDTO;
 import ma.lpee.lpeebackend.dto.response.EssaiResponseDTO;
 import ma.lpee.lpeebackend.entity.Essai;
 import ma.lpee.lpeebackend.entity.Produit;
+import ma.lpee.lpeebackend.exception.DuplicateResourceException;
+import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.EssaiMapper;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.ProduitRepository;
@@ -27,10 +29,12 @@ public class EssaiServiceImpl implements EssaiService {
     public EssaiResponseDTO create(EssaiRequestDTO requestDTO) {
 
         Produit produit = produitRepository.findById(requestDTO.getIdProduit())
-                .orElseThrow(() -> new RuntimeException("Produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable."));
 
         if (essaiRepository.existsByNumeroEssai(requestDTO.getNumeroEssai())) {
-            throw new RuntimeException("Un essai avec ce numéro existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un essai avec ce numéro existe déjà."
+            );
         }
 
         Essai essai = essaiMapper.toEntity(requestDTO);
@@ -45,14 +49,16 @@ public class EssaiServiceImpl implements EssaiService {
     public EssaiResponseDTO update(Long id, EssaiRequestDTO requestDTO) {
 
         Essai essai = essaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         Produit produit = produitRepository.findById(requestDTO.getIdProduit())
-                .orElseThrow(() -> new RuntimeException("Produit introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable."));
 
         if (!essai.getNumeroEssai().equals(requestDTO.getNumeroEssai())
                 && essaiRepository.existsByNumeroEssai(requestDTO.getNumeroEssai())) {
-            throw new RuntimeException("Un essai avec ce numéro existe déjà.");
+            throw new DuplicateResourceException(
+                    "Un essai avec ce numéro existe déjà."
+            );
         }
 
         essaiMapper.updateEntityFromDto(requestDTO, essai);
@@ -68,7 +74,7 @@ public class EssaiServiceImpl implements EssaiService {
     public EssaiResponseDTO getById(Long id) {
 
         Essai essai = essaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         return essaiMapper.toResponseDTO(essai);
     }
@@ -107,7 +113,7 @@ public class EssaiServiceImpl implements EssaiService {
     public void delete(Long id) {
 
         Essai essai = essaiRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Essai introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Essai introuvable."));
 
         essaiRepository.delete(essai);
     }
