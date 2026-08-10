@@ -11,6 +11,7 @@ import ma.lpee.lpeebackend.repository.RoleRepository;
 import ma.lpee.lpeebackend.repository.UniteRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.UtilisateurService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final RoleRepository roleRepository;
     private final UniteRepository uniteRepository;
     private final UtilisateurMapper utilisateurMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UtilisateurResponseDTO create(UtilisateurRequestDTO dto) {
@@ -48,6 +50,11 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         Utilisateur entity = utilisateurMapper.toEntity(dto);
+
+        // Encodage du mot de passe avant l'enregistrement
+        entity.setMotDePasse(
+                passwordEncoder.encode(dto.getMotDePasse())
+        );
 
         Utilisateur saved = utilisateurRepository.save(entity);
 
@@ -77,7 +84,9 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     }
 
     @Override
-    public UtilisateurResponseDTO update(Long id, UtilisateurRequestDTO dto) {
+    public UtilisateurResponseDTO update(
+            Long id,
+            UtilisateurRequestDTO dto) {
 
         Utilisateur entity = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -105,6 +114,11 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         utilisateurMapper.updateEntityFromDto(dto, entity);
+
+        // Encodage du nouveau mot de passe avant l'enregistrement
+        entity.setMotDePasse(
+                passwordEncoder.encode(dto.getMotDePasse())
+        );
 
         Utilisateur updated = utilisateurRepository.save(entity);
 
