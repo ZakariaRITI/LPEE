@@ -17,6 +17,9 @@ public class UtilisateurRequestDTO {
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")
     private String nomUser;
 
+    @NotBlank(message = "Le matricule est obligatoire")
+    private String matricule;
+
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "Format d'email invalide")
     private String email;

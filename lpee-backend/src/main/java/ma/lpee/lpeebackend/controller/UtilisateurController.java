@@ -98,4 +98,13 @@ public class UtilisateurController {
                 utilisateurService.getByEmail(email)
         );
     }
+
+    @GetMapping("/matricule/{matricule}")
+    public ResponseEntity<UtilisateurResponseDTO> getByMatricule(
+            @PathVariable String matricule) {
+
+        return ResponseEntity.ok(
+                utilisateurService.getByMatricule(matricule)
+        );
+    }
 }

@@ -31,6 +31,12 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     @Override
     public UtilisateurResponseDTO create(UtilisateurRequestDTO dto) {
 
+        if (utilisateurRepository.existsByMatricule(dto.getMatricule())) {
+            throw new DuplicateResourceException(
+                    "Un utilisateur avec le matricule '" + dto.getMatricule() + "' existe déjà"
+            );
+        }
+
         if (utilisateurRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateResourceException(
                     "Un utilisateur avec l'email '" + dto.getEmail() + "' existe déjà"
@@ -98,6 +104,14 @@ public class UtilisateurServiceImpl implements UtilisateurService {
 
             throw new DuplicateResourceException(
                     "Un utilisateur avec l'email '" + dto.getEmail() + "' existe déjà"
+            );
+        }
+
+        if (!entity.getMatricule().equals(dto.getMatricule())
+                && utilisateurRepository.existsByMatricule(dto.getMatricule())) {
+
+            throw new DuplicateResourceException(
+                    "Un utilisateur avec le matricule '" + dto.getMatricule() + "' existe déjà"
             );
         }
 
@@ -176,6 +190,18 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur entity = utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Utilisateur introuvable avec l'email '" + email + "'"
+                ));
+
+        return utilisateurMapper.toResponseDTO(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UtilisateurResponseDTO getByMatricule(String matricule) {
+
+        Utilisateur entity = utilisateurRepository.findByMatricule(matricule)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utilisateur introuvable avec le matricule '" + matricule + "'"
                 ));
 
         return utilisateurMapper.toResponseDTO(entity);

@@ -1,0 +1,5 @@
+.profile-page { max-width: 1060px; }
+.profile-card { max-width: 850px; }
+.profile-card .form-card-heading p { margin: .35rem 0 0; color: #71859a; font-size: .88rem; }
+.profile-card .save-button { display: inline-flex; align-items: center; gap: .45rem; }
+.profile-card .save-button:disabled { cursor: wait; opacity: .7; }

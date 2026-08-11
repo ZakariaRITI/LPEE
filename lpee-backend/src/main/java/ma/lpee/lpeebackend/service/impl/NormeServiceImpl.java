@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.NormeRequestDTO;
 import ma.lpee.lpeebackend.dto.response.NormeResponseDTO;
 import ma.lpee.lpeebackend.entity.Norme;
+import ma.lpee.lpeebackend.entity.Organisme;
 import ma.lpee.lpeebackend.exception.DuplicateResourceException;
 import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.NormeMapper;
 import ma.lpee.lpeebackend.repository.NormeRepository;
+import ma.lpee.lpeebackend.repository.OrganismeRepository;
 import ma.lpee.lpeebackend.service.NormeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import java.util.List;
 public class NormeServiceImpl implements NormeService {
 
     private final NormeRepository normeRepository;
+    private final OrganismeRepository organismeRepository;
     private final NormeMapper normeMapper;
 
     @Override
@@ -37,7 +40,14 @@ public class NormeServiceImpl implements NormeService {
             );
         }
 
+        Organisme organisme = organismeRepository.findById(requestDTO.getIdOrganisme())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organisme introuvable."
+                ));
+
         Norme norme = normeMapper.toEntity(requestDTO);
+
+        norme.setOrganisme(organisme);
 
         Norme saved = normeRepository.save(norme);
 
@@ -66,7 +76,14 @@ public class NormeServiceImpl implements NormeService {
             );
         }
 
+        Organisme organisme = organismeRepository.findById(requestDTO.getIdOrganisme())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organisme introuvable."
+                ));
+
         normeMapper.updateEntityFromDto(requestDTO, norme);
+
+        norme.setOrganisme(organisme);
 
         Norme updated = normeRepository.save(norme);
 

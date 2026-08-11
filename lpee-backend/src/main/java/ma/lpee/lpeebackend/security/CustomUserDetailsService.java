@@ -16,18 +16,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UtilisateurRepository utilisateurRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email)
+    public UserDetails loadUserByUsername(String matricule)
             throws UsernameNotFoundException {
 
-        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+        Utilisateur utilisateur = utilisateurRepository.findByMatricule(matricule)
                 .orElseThrow(() ->
                         new UsernameNotFoundException(
-                                "Utilisateur introuvable avec l'email : " + email
+                                "Utilisateur introuvable avec le matricule : " + matricule
                         )
                 );
 
         return User.builder()
-                .username(utilisateur.getEmail())
+                .username(utilisateur.getMatricule())
                 .password(utilisateur.getMotDePasse())
                 .authorities("ROLE_" + utilisateur.getRole().getCodeRole())
                 .build();

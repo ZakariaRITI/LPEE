@@ -17,6 +17,7 @@ public interface UtilisateurMapper {
      */
     @Mapping(target = "idRole", source = "role.idRole")
     @Mapping(target = "idUnite", source = "unite.idUnite")
+    @Mapping(target = "matricule", source = "matricule")
     UtilisateurResponseDTO toResponseDTO(Utilisateur entity);
 
     /**
@@ -25,6 +26,7 @@ public interface UtilisateurMapper {
      * Les relations Role et Unite sont résolues via les méthodes helper.
      */
     @Mapping(target = "idUser", ignore = true)
+    @Mapping(target = "matricule", source = "matricule")
     @Mapping(target = "role", source = "idRole")
     @Mapping(target = "unite", source = "idUnite")
     Utilisateur toEntity(UtilisateurRequestDTO dto);
@@ -34,6 +36,7 @@ public interface UtilisateurMapper {
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "idUser", ignore = true)
+    @Mapping(target = "matricule", source = "matricule")
     @Mapping(target = "role", source = "idRole")
     @Mapping(target = "unite", source = "idUnite")
     void updateEntityFromDto(UtilisateurRequestDTO dto, @MappingTarget Utilisateur entity);

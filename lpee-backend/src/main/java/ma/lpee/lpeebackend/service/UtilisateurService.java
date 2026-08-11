@@ -22,5 +22,7 @@ public interface UtilisateurService {
     List<UtilisateurResponseDTO> getByRole(Long idRole);
 
     UtilisateurResponseDTO getByEmail(String email);
+
+    UtilisateurResponseDTO getByMatricule(String matricule);
 }
 

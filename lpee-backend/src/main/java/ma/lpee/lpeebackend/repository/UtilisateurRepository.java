@@ -15,7 +15,12 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     @Query("SELECT u FROM Utilisateur u JOIN FETCH u.role WHERE u.email = :email")
     Optional<Utilisateur> findByEmail(@Param("email") String email);
 
+    @Query("SELECT u FROM Utilisateur u JOIN FETCH u.role WHERE u.matricule = :matricule")
+    Optional<Utilisateur> findByMatricule(@Param("matricule") String matricule);
+
     boolean existsByEmail(String email);
+
+    boolean existsByMatricule(String matricule);
 
     List<Utilisateur> findByUniteIdUnite(Long idUnite);
 

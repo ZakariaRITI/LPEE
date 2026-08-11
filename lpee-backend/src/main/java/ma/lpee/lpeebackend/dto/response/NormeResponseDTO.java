@@ -4,7 +4,9 @@ import lombok.Data;
 
 @Data
 public class NormeResponseDTO {
+
     private Long idNorme;
+    private Long idOrganisme;
     private String numeroNorme;
     private String codeNorme;
     private String nomNorme;

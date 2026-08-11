@@ -29,17 +29,17 @@ public class AuthController {
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
-                                dto.getEmail(),
+                                dto.getMatricule(),
                                 dto.getMotDePasse()
                         )
                 );
 
         Utilisateur utilisateur =
-                utilisateurRepository.findByEmail(dto.getEmail())
+                utilisateurRepository.findByMatricule(dto.getMatricule())
                         .orElseThrow();
 
         String token = jwtService.generateToken(
-                utilisateur.getEmail(),
+                utilisateur.getMatricule(),
                 utilisateur.getRole().getCodeRole()
         );
 
@@ -48,6 +48,7 @@ public class AuthController {
                         token,
                         "Bearer",
                         utilisateur.getIdUser(),
+                        utilisateur.getMatricule(),
                         utilisateur.getEmail(),
                         utilisateur.getRole().getCodeRole()
                 );

@@ -8,6 +8,7 @@ public class UtilisateurResponseDTO {
     private Long idRole;
     private Long idUnite;
     private String nomUser;
+    private String matricule;
     private String email;
     private String statut;
 }

@@ -27,10 +27,10 @@ public class JwtService {
         );
     }
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String matricule, String role) {
 
         return Jwts.builder()
-                .subject(email)
+                .subject(matricule)
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(
@@ -40,7 +40,7 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public String extractMatricule(String token) {
 
         return extractClaim(token, Claims::getSubject);
     }
@@ -52,9 +52,9 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
 
-        String email = extractEmail(token);
+        String matricule = extractMatricule(token);
 
-        return email.equals(userDetails.getUsername())
+        return matricule.equals(userDetails.getUsername())
                 && !isTokenExpired(token);
     }
 

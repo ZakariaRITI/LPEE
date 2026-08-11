@@ -20,6 +20,9 @@ public class Utilisateur {
     @Column(name = "nom_user", nullable = false, length = 150)
     private String nomUser;
 
+    @Column(name = "matricule", nullable = false, unique = true, length = 100)
+    private String matricule;
+
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 

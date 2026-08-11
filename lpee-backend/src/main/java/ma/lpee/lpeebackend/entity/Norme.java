@@ -2,6 +2,7 @@ package ma.lpee.lpeebackend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,10 @@ public class Norme {
 
     @Column(name = "statut", length = 50)
     private String statut;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_organisme", nullable = false)
+    private Organisme organisme;
 
     @ManyToMany(mappedBy = "normes", fetch = FetchType.LAZY)
     @Builder.Default
