@@ -7,7 +7,10 @@ import ma.lpee.lpeebackend.entity.RealisationEssai;
 import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.RealisationEssaiMapper;
 import ma.lpee.lpeebackend.repository.RealisationEssaiRepository;
+import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.RealisationEssaiService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
 
     private final RealisationEssaiRepository realisationEssaiRepository;
     private final RealisationEssaiMapper realisationEssaiMapper;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Override
     public RealisationEssaiResponseDTO create(RealisationEssaiRequestDTO dto) {
@@ -28,10 +32,21 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
         RealisationEssai entity = realisationEssaiMapper.toEntity(dto);
 
         entity.setCreeLe(LocalDateTime.now());
+        entity.setCreePar(getAuthenticatedUserId());
 
         RealisationEssai savedEntity = realisationEssaiRepository.save(entity);
 
         return realisationEssaiMapper.toResponseDTO(savedEntity);
+    }
+
+    private Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResourceNotFoundException("Utilisateur authentifié introuvable.");
+        }
+        return utilisateurRepository.findByMatricule(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur authentifié introuvable."))
+                .getIdUser();
     }
 
     @Override

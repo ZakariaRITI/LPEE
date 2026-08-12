@@ -12,7 +12,10 @@ import ma.lpee.lpeebackend.mapper.EquipementEssaiMapper;
 import ma.lpee.lpeebackend.repository.EquipementEssaiRepository;
 import ma.lpee.lpeebackend.repository.EquipementRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
+import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.EquipementEssaiService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     private final EssaiRepository essaiRepository;
     private final EquipementRepository equipementRepository;
     private final EquipementEssaiMapper equipementEssaiMapper;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Override
     public EquipementEssaiResponseDTO create(EquipementEssaiRequestDTO requestDTO) {
@@ -49,10 +53,21 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
         equipementEssai.setEssai(essai);
         equipementEssai.setEquipement(equipement);
         equipementEssai.setCreeLe(LocalDateTime.now());
+        equipementEssai.setCreePar(getAuthenticatedUserId());
 
         EquipementEssai saved = equipementEssaiRepository.save(equipementEssai);
 
         return equipementEssaiMapper.toResponseDTO(saved);
+    }
+
+    private Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResourceNotFoundException("Utilisateur authentifié introuvable.");
+        }
+        return utilisateurRepository.findByMatricule(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur authentifié introuvable."))
+                .getIdUser();
     }
 
     @Override

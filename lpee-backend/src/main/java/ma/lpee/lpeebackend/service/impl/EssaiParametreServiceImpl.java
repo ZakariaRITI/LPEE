@@ -12,7 +12,10 @@ import ma.lpee.lpeebackend.mapper.EssaiParametreMapper;
 import ma.lpee.lpeebackend.repository.EssaiParametreRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.ParametreRepository;
+import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.EssaiParametreService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     private final EssaiRepository essaiRepository;
     private final ParametreRepository parametreRepository;
     private final EssaiParametreMapper essaiParametreMapper;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Override
     public EssaiParametreResponseDTO create(EssaiParametreRequestDTO requestDTO) {
@@ -51,10 +55,21 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
         essaiParametre.setEssai(essai);
         essaiParametre.setParametre(parametre);
         essaiParametre.setCreeLe(LocalDateTime.now());
+        essaiParametre.setCreePar(getAuthenticatedUserId());
 
         EssaiParametre saved = essaiParametreRepository.save(essaiParametre);
 
         return essaiParametreMapper.toResponseDTO(saved);
+    }
+
+    private Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResourceNotFoundException("Utilisateur authentifié introuvable.");
+        }
+        return utilisateurRepository.findByMatricule(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur authentifié introuvable."))
+                .getIdUser();
     }
 
     @Override

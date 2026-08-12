@@ -11,6 +11,21 @@ function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingSession, setPendingSession] = useState(null);
+  const [passwordForm, setPasswordForm] = useState({ nouveauMotDePasse: "", confirmation: "" });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const completeLogin = (session) => {
+    saveSession(session);
+
+    if (!getValidSession()) {
+      throw new Error("Invalid authentication response.");
+    }
+
+    onLogin();
+    navigate("/dashboard", { replace: true });
+  };
 
   const handleChange = ({ target: { name, value } }) => {
     setForm((current) => ({ ...current, [name]: value }));
@@ -28,14 +43,14 @@ function Login({ onLogin }) {
         throw new Error("Invalid authentication response.");
       }
 
-      saveSession(data);
-
-      if (!getValidSession()) {
-        throw new Error("Invalid authentication response.");
+      if (form.motDePasse === "Password.123") {
+        setPendingSession(data);
+        setPasswordForm({ nouveauMotDePasse: "", confirmation: "" });
+        setPasswordErrors({});
+        return;
       }
 
-      onLogin();
-      navigate("/dashboard", { replace: true });
+      completeLogin(data);
     } catch (requestError) {
       const messages = requestError.response?.data?.messages;
       setError(
@@ -47,6 +62,50 @@ function Login({ onLogin }) {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordChange = async (event) => {
+    event.preventDefault();
+    const nextErrors = {};
+    const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    if (!passwordForm.nouveauMotDePasse) nextErrors.nouveauMotDePasse = "Le nouveau mot de passe est obligatoire.";
+    else if (passwordForm.nouveauMotDePasse === "Password.123") nextErrors.nouveauMotDePasse = "Le nouveau mot de passe doit être différent du mot de passe temporaire.";
+    else if (!passwordRule.test(passwordForm.nouveauMotDePasse)) nextErrors.nouveauMotDePasse = "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.";
+    if (!passwordForm.confirmation) nextErrors.confirmation = "La confirmation est obligatoire.";
+    else if (passwordForm.nouveauMotDePasse !== passwordForm.confirmation) nextErrors.confirmation = "Les deux mots de passe doivent être identiques.";
+    if (Object.keys(nextErrors).length) { setPasswordErrors(nextErrors); return; }
+
+    setIsChangingPassword(true);
+    setPasswordErrors({});
+    const authorization = { headers: { Authorization: `Bearer ${pendingSession.token}` } };
+
+    try {
+      const { data: user } = await api.get(`/api/utilisateurs/${pendingSession.idUser}`, authorization);
+      await api.put(`/api/utilisateurs/${pendingSession.idUser}`, {
+        idRole: user.idRole,
+        idUnite: user.idUnite,
+        nomUser: user.nomUser,
+        matricule: user.matricule,
+        email: user.email,
+        motDePasse: passwordForm.nouveauMotDePasse,
+        statut: user.statut || "ACTIF",
+      }, authorization);
+
+      const { data: newSession } = await api.post("/api/auth/login", {
+        matricule: form.matricule,
+        motDePasse: passwordForm.nouveauMotDePasse,
+      });
+      if (!newSession?.token || newSession.type !== "Bearer") throw new Error("Invalid authentication response.");
+
+      setPendingSession(null);
+      completeLogin(newSession);
+    } catch (requestError) {
+      const response = requestError.response?.data;
+      setPasswordErrors(response?.messages || { form: response?.message || "La modification du mot de passe a échoué. Veuillez réessayer." });
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -95,6 +154,24 @@ function Login({ onLogin }) {
           <p className="support-text">Besoin d’aide ? Contactez votre administrateur.</p>
         </div>
       </section>
+
+      {pendingSession && <div className="password-modal-backdrop">
+        <section className="password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+          <p className="eyebrow">Sécurité du compte</p>
+          <h2 id="password-modal-title">Modifiez votre mot de passe</h2>
+          <p className="password-modal-intro">Votre mot de passe temporaire doit être remplacé avant d’accéder à l’application.</p>
+          <form onSubmit={handlePasswordChange} noValidate>
+            <label htmlFor="nouveauMotDePasse">Nouveau mot de passe</label>
+            <div className="input-wrap"><LockKeyhole aria-hidden="true" size={19} /><input id="nouveauMotDePasse" type="password" autoComplete="new-password" value={passwordForm.nouveauMotDePasse} onChange={(event) => setPasswordForm((current) => ({ ...current, nouveauMotDePasse: event.target.value }))} required /></div>
+            {passwordErrors.nouveauMotDePasse && <p className="form-error" role="alert">{passwordErrors.nouveauMotDePasse}</p>}
+            <label htmlFor="confirmationMotDePasse">Confirmer le nouveau mot de passe</label>
+            <div className="input-wrap"><LockKeyhole aria-hidden="true" size={19} /><input id="confirmationMotDePasse" type="password" autoComplete="new-password" value={passwordForm.confirmation} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmation: event.target.value }))} required /></div>
+            {passwordErrors.confirmation && <p className="form-error" role="alert">{passwordErrors.confirmation}</p>}
+            {passwordErrors.form && <p className="form-error" role="alert">{passwordErrors.form}</p>}
+            <button className="submit-button" type="submit" disabled={isChangingPassword}>{isChangingPassword ? "Modification en cours…" : "Modifier et continuer"}</button>
+          </form>
+        </section>
+      </div>}
     </main>
   );
 }

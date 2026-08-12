@@ -11,12 +11,14 @@ import Produit from "./Produit";
 import Equipement from "./Equipement";
 import Norme from "./Norme";
 import Essai from "./Essai";
+import RealisationEssai from "./RealisationEssai";
 import Utilisateur from "./Utilisateur";
 import Profil from "./Profil";
+import Vue360 from "./Vue360";
 import "./Dashboard.css";
 
 const menuGroups = [
-  { label: "Référentiel", icon: BookOpen, items: [["Unité", "unites"], ["Produit", "produits"], ["Équipement", "equipements"], ["Norme", "normes"], ["Essai", "essais"], ["Document", "documents"]] },
+  { label: "Référentiel", icon: BookOpen, items: [["Unité", "unites"], ["Produit", "produits"], ["Équipement", "equipements"], ["Norme", "normes"], ["Essai", "essais"], ["Réalisation Essai", "realisations-essais"]] },
   { label: "Administration", icon: Settings, items: [["Utilisateur", "utilisateurs"]] },
   { label: "Document", icon: FileText, items: [["Essai", "documents/essais"], ["Norme", "documents/normes"]] },
   { label: "Vue 360", icon: BarChart3, items: [["Accéder à la vue 360", "vue-360"]] },
@@ -176,7 +178,7 @@ function Dashboard({ onLogout }) {
     {isSidebarOpen && <button className="sidebar-backdrop" aria-label="Fermer le menu" onClick={closeSidebar} />}
 
     <main className="dashboard-content">
-      {activePath === "unites" ? <Unite /> : activePath === "produits" ? <Produit /> : activePath === "equipements" ? <Equipement /> : activePath === "normes" ? <Norme /> : activePath === "essais" ? <Essai /> : activePath === "utilisateurs" ? <Utilisateur /> : activePath === "profil" ? <Profil /> : <>
+      {activePath === "unites" ? <Unite /> : activePath === "produits" ? <Produit /> : activePath === "equipements" ? <Equipement /> : activePath === "normes" ? <Norme /> : activePath === "essais" ? <Essai /> : activePath === "realisations-essais" ? <RealisationEssai /> : activePath === "utilisateurs" ? <Utilisateur /> : activePath === "profil" ? <Profil /> : activePath === "vue-360" ? <Vue360 /> : <>
       <section className="dashboard-heading"><div><p className="dashboard-eyebrow">Vue d’ensemble</p><h1>Tableau de bord</h1><p>Suivez l’état de votre référentiel des essais de laboratoire.</p></div><span className="live-status"><i />Données en temps réel</span></section>
       {loadError && <p className="dashboard-error" role="alert">{loadError}</p>}
       <section className="kpi-grid" aria-label="Indicateurs clés">
