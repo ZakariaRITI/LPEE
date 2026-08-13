@@ -14,6 +14,7 @@ import ma.lpee.lpeebackend.repository.EquipementRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.EquipementEssaiService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
     private final EquipementRepository equipementRepository;
     private final EquipementEssaiMapper equipementEssaiMapper;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public EquipementEssaiResponseDTO create(EquipementEssaiRequestDTO requestDTO) {
@@ -86,7 +88,13 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
 
         equipementEssai.setEssai(essai);
         equipementEssai.setEquipement(equipement);
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         equipementEssai.setModifieLe(LocalDateTime.now());
+        equipementEssai.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(equipementEssai.getStatut())) {
+            equipementEssai.setAnnuleLe(LocalDateTime.now());
+            equipementEssai.setAnnulePar(authenticatedUserId);
+        }
 
         EquipementEssai updated = equipementEssaiRepository.save(equipementEssai);
 
@@ -139,6 +147,9 @@ public class EquipementEssaiServiceImpl implements EquipementEssaiService {
         EquipementEssai equipementEssai = equipementEssaiRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisation d'équipement introuvable."));
 
-        equipementEssaiRepository.delete(equipementEssai);
+        equipementEssai.setStatut("INACTIF");
+        equipementEssai.setAnnuleLe(LocalDateTime.now());
+        equipementEssai.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        equipementEssaiRepository.save(equipementEssai);
     }
 }

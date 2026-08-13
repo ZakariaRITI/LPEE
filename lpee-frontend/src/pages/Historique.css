@@ -1,0 +1,16 @@
+.historique-page { max-width: 1180px; }
+.historique-card { margin-top: 0; }
+.historique-toolbar { display: flex; justify-content: flex-end; gap: .75rem; padding: 1.1rem 1.35rem; border-bottom: 1px solid #e9eff3; background: #fafcfd; }
+.historique-search { display: flex; align-items: center; gap: .55rem; width: min(360px, 100%); min-height: 42px; padding: 0 .8rem; border: 1px solid #d9e3eb; border-radius: 8px; color: #71859a; background: #fff; }
+.historique-search:focus-within { border-color: #1683bd; box-shadow: 0 0 0 3px rgba(22,131,189,.11); }
+.historique-search input { width: 100%; border: 0; outline: 0; color: #263f56; background: transparent; }
+.historique-toolbar select { min-width: 190px; min-height: 42px; padding: 0 .75rem; border: 1px solid #d9e3eb; border-radius: 8px; outline: 0; color: #526c82; background: #fff; }
+.historique-toolbar select:focus { border-color: #1683bd; box-shadow: 0 0 0 3px rgba(22,131,189,.11); }
+.historique-action { display: inline-block; padding: .32rem .58rem; border-radius: 999px; font-size: .73rem; font-weight: 750; }
+.historique-action.creation { color: #147458; background: #eaf8f2; }
+.historique-action.modification { color: #0877b6; background: #e7f5fc; }
+.historique-action.suppression { color: #b8444d; background: #fff0f1; }
+.historique-target { display: inline-block; padding: .32rem .58rem; border-radius: 999px; color: #526c82; background: #eef3f6; font-size: .73rem; font-weight: 750; }
+.historique-detail { min-width: 180px; color: #29465f !important; font-weight: 650; }
+.historique-error { margin: 1rem 1.35rem; padding: .8rem 1rem; border-radius: 8px; color: #a83842; background: #fff0f1; }
+@media (max-width: 650px) { .historique-toolbar { flex-direction: column; }.historique-search, .historique-toolbar select { width: 100%; } }

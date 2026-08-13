@@ -13,6 +13,7 @@ import ma.lpee.lpeebackend.repository.DocumentRepository;
 import ma.lpee.lpeebackend.repository.DocumentationEssaiRepository;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.service.DocumentationEssaiService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
     private final EssaiRepository essaiRepository;
     private final DocumentRepository documentRepository;
     private final DocumentationEssaiMapper documentationEssaiMapper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public DocumentationEssaiResponseDTO create(DocumentationEssaiRequestDTO requestDTO) {
@@ -71,7 +73,13 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
 
         documentationEssai.setEssai(essai);
         documentationEssai.setDocument(document);
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         documentationEssai.setModifieLe(LocalDateTime.now());
+        documentationEssai.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(documentationEssai.getStatut())) {
+            documentationEssai.setAnnuleLe(LocalDateTime.now());
+            documentationEssai.setAnnulePar(authenticatedUserId);
+        }
 
         DocumentationEssai updated = documentationEssaiRepository.save(documentationEssai);
 
@@ -124,6 +132,9 @@ public class DocumentationEssaiServiceImpl implements DocumentationEssaiService 
         DocumentationEssai documentationEssai = documentationEssaiRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Documentation d'essai introuvable."));
 
-        documentationEssaiRepository.delete(documentationEssai);
+        documentationEssai.setStatut("INACTIF");
+        documentationEssai.setAnnuleLe(LocalDateTime.now());
+        documentationEssai.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        documentationEssaiRepository.save(documentationEssai);
     }
 }

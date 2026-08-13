@@ -8,6 +8,7 @@ import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.PublicationNormeMapper;
 import ma.lpee.lpeebackend.repository.PublicationNormeRepository;
 import ma.lpee.lpeebackend.service.PublicationNormeService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
 
     private final PublicationNormeRepository publicationNormeRepository;
     private final PublicationNormeMapper publicationNormeMapper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public PublicationNormeResponseDTO create(PublicationNormeRequestDTO dto) {
@@ -68,7 +70,13 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
 
         publicationNormeMapper.updateEntityFromDto(dto, entity);
 
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         entity.setModifieLe(LocalDateTime.now());
+        entity.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(entity.getStatut())) {
+            entity.setAnnuleLe(LocalDateTime.now());
+            entity.setAnnulePar(authenticatedUserId);
+        }
 
         PublicationNorme updatedEntity =
                 publicationNormeRepository.save(entity);
@@ -84,7 +92,10 @@ public class PublicationNormeServiceImpl implements PublicationNormeService {
                         "PublicationNorme introuvable avec l'id : " + id
                 ));
 
-        publicationNormeRepository.delete(entity);
+        entity.setStatut("INACTIF");
+        entity.setAnnuleLe(LocalDateTime.now());
+        entity.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        publicationNormeRepository.save(entity);
     }
 
     @Override

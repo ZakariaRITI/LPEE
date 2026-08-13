@@ -14,6 +14,7 @@ import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.ParametreRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.EssaiParametreService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
     private final ParametreRepository parametreRepository;
     private final EssaiParametreMapper essaiParametreMapper;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public EssaiParametreResponseDTO create(EssaiParametreRequestDTO requestDTO) {
@@ -90,7 +92,13 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
 
         essaiParametre.setEssai(essai);
         essaiParametre.setParametre(parametre);
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         essaiParametre.setModifieLe(LocalDateTime.now());
+        essaiParametre.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(essaiParametre.getStatut())) {
+            essaiParametre.setAnnuleLe(LocalDateTime.now());
+            essaiParametre.setAnnulePar(authenticatedUserId);
+        }
 
         EssaiParametre updated = essaiParametreRepository.save(essaiParametre);
 
@@ -147,6 +155,9 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
                         "Association essai-paramètre introuvable."
                 ));
 
-        essaiParametreRepository.delete(essaiParametre);
+        essaiParametre.setStatut("INACTIF");
+        essaiParametre.setAnnuleLe(LocalDateTime.now());
+        essaiParametre.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        essaiParametreRepository.save(essaiParametre);
     }
 }

@@ -4,7 +4,7 @@ import api from "../services/api";
 import { getValidSession } from "../services/auth";
 import "./Profil.css";
 
-const emptyForm = { nomUser: "", email: "", motDePasse: "" };
+const emptyForm = { nomUser: "", matricule: "", email: "", motDePasse: "" };
 
 function Profil() {
   const [session] = useState(() => getValidSession());
@@ -21,7 +21,10 @@ function Profil() {
       : Promise.reject(new Error("Votre session utilisateur est introuvable."));
 
     request
-      .then(({ data }) => { setUser(data); setForm({ nomUser: data.nomUser || "", email: data.email || "", motDePasse: "" }); })
+      .then(({ data }) => {
+        setUser(data);
+        setForm({ nomUser: data.nomUser || "", matricule: data.matricule || "", email: data.email || "", motDePasse: "" });
+      })
       .catch((error) => setErrors({ form: error.response?.data?.message || error.message || "Impossible de charger votre profil." }))
       .finally(() => setLoading(false));
   }, [session?.idUser]);
@@ -31,6 +34,7 @@ function Profil() {
     event.preventDefault();
     const nextErrors = {};
     if (!form.nomUser.trim()) nextErrors.nomUser = "Le nom est obligatoire.";
+    if (!form.matricule.trim()) nextErrors.matricule = "Le matricule est obligatoire.";
     if (!form.email.trim()) nextErrors.email = "L’email est obligatoire.";
     if (!form.motDePasse) nextErrors.motDePasse = "Le mot de passe est obligatoire pour enregistrer les modifications.";
     if (Object.keys(nextErrors).length) { setErrors(nextErrors); return; }
@@ -41,12 +45,13 @@ function Profil() {
         idRole: user.idRole,
         idUnite: user.idUnite,
         nomUser: form.nomUser.trim(),
+        matricule: form.matricule.trim(),
         email: form.email.trim(),
         motDePasse: form.motDePasse,
         statut: user.statut || "ACTIF",
       });
       setUser(data);
-      setForm((current) => ({ ...current, nomUser: data.nomUser, email: data.email, motDePasse: "" }));
+      setForm((current) => ({ ...current, nomUser: data.nomUser, matricule: data.matricule, email: data.email, motDePasse: "" }));
       setMessage("Vos informations ont été mises à jour avec succès.");
     } catch (error) {
       const response = error.response?.data;
@@ -63,6 +68,7 @@ function Profil() {
       {isLoading ? <p className="table-state">Chargement de votre profil…</p> : !user ? <p className="form-global-error">{errors.form}</p> : <form className="unite-form" onSubmit={submit}>
         <div className="form-grid">
           <div className="form-field"><label htmlFor="profile-name">Nom <b>*</b></label><input id="profile-name" value={form.nomUser} onChange={(event) => change("nomUser", event.target.value)} />{errors.nomUser && <span className="field-error">{errors.nomUser}</span>}</div>
+          <div className="form-field"><label htmlFor="profile-matricule">Matricule <b>*</b></label><input id="profile-matricule" value={form.matricule} readOnly />{errors.matricule && <span className="field-error">{errors.matricule}</span>}</div>
           <div className="form-field"><label htmlFor="profile-email">Email <b>*</b></label><input id="profile-email" type="email" value={form.email} onChange={(event) => change("email", event.target.value)} />{errors.email && <span className="field-error">{errors.email}</span>}</div>
           <div className="form-field form-field-wide"><label htmlFor="profile-password">Nouveau mot de passe <b>*</b></label><input id="profile-password" type="password" value={form.motDePasse} onChange={(event) => change("motDePasse", event.target.value)} placeholder="8 caractères minimum, avec majuscule, chiffre et caractère spécial" />{errors.motDePasse && <span className="field-error">{errors.motDePasse}</span>}</div>
         </div>

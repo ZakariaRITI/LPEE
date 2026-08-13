@@ -14,6 +14,7 @@ import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.NormeRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.ConformiteNormeService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
     private final NormeRepository normeRepository;
     private final ConformiteNormeMapper conformiteNormeMapper;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public ConformiteNormeResponseDTO create(ConformiteNormeRequestDTO requestDTO) {
@@ -86,7 +88,13 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
 
         conformiteNorme.setEssai(essai);
         conformiteNorme.setNorme(norme);
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         conformiteNorme.setModifieLe(LocalDateTime.now());
+        conformiteNorme.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(conformiteNorme.getStatut())) {
+            conformiteNorme.setAnnuleLe(LocalDateTime.now());
+            conformiteNorme.setAnnulePar(authenticatedUserId);
+        }
 
         ConformiteNorme updated = conformiteNormeRepository.save(conformiteNorme);
 
@@ -139,6 +147,9 @@ public class ConformiteNormeServiceImpl implements ConformiteNormeService {
         ConformiteNorme conformiteNorme = conformiteNormeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conformité introuvable."));
 
-        conformiteNormeRepository.delete(conformiteNorme);
+        conformiteNorme.setStatut("INACTIF");
+        conformiteNorme.setAnnuleLe(LocalDateTime.now());
+        conformiteNorme.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        conformiteNormeRepository.save(conformiteNorme);
     }
 }

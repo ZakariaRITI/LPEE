@@ -9,6 +9,7 @@ import ma.lpee.lpeebackend.mapper.RealisationEssaiMapper;
 import ma.lpee.lpeebackend.repository.RealisationEssaiRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import ma.lpee.lpeebackend.service.RealisationEssaiService;
+import ma.lpee.lpeebackend.security.AuthenticatedUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
     private final RealisationEssaiRepository realisationEssaiRepository;
     private final RealisationEssaiMapper realisationEssaiMapper;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Override
     public RealisationEssaiResponseDTO create(RealisationEssaiRequestDTO dto) {
@@ -83,7 +85,13 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
 
         realisationEssaiMapper.updateEntityFromDto(dto, entity);
 
+        Long authenticatedUserId = authenticatedUserService.getAuthenticatedUserId();
         entity.setModifieLe(LocalDateTime.now());
+        entity.setModifiePar(authenticatedUserId);
+        if ("INACTIF".equalsIgnoreCase(entity.getStatut())) {
+            entity.setAnnuleLe(LocalDateTime.now());
+            entity.setAnnulePar(authenticatedUserId);
+        }
 
         RealisationEssai updatedEntity =
                 realisationEssaiRepository.save(entity);
@@ -99,7 +107,10 @@ public class RealisationEssaiServiceImpl implements RealisationEssaiService {
                         "Réalisation d'essai introuvable avec l'id : " + id
                 ));
 
-        realisationEssaiRepository.delete(entity);
+        entity.setStatut("INACTIF");
+        entity.setAnnuleLe(LocalDateTime.now());
+        entity.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
+        realisationEssaiRepository.save(entity);
     }
 
     @Override
