@@ -12,5 +12,12 @@
 .historique-action.suppression { color: #b8444d; background: #fff0f1; }
 .historique-target { display: inline-block; padding: .32rem .58rem; border-radius: 999px; color: #526c82; background: #eef3f6; font-size: .73rem; font-weight: 750; }
 .historique-detail { min-width: 180px; color: #29465f !important; font-weight: 650; }
+.historique-changes { display: grid; gap: .42rem; min-width: 270px; }
+.historique-change { display: grid; grid-template-columns: minmax(105px, 1fr) minmax(100px, auto); align-items: center; gap: .55rem; font-size: .78rem; font-weight: 500; }
+.historique-change b { color: #29465f; }
+.change-values { display: inline-flex; align-items: center; justify-content: flex-end; gap: .38rem; }
+.historique-change .old-value { color: #a0444c; text-decoration: line-through; text-decoration-color: rgba(160,68,76,.4); }
+.historique-change .new-value { color: #147458; font-weight: 700; }
+.change-arrow { color: #8b9aaa; text-align: center; }
 .historique-error { margin: 1rem 1.35rem; padding: .8rem 1rem; border-radius: 8px; color: #a83842; background: #fff0f1; }
 @media (max-width: 650px) { .historique-toolbar { flex-direction: column; }.historique-search, .historique-toolbar select { width: 100%; } }

@@ -2,6 +2,7 @@ package ma.lpee.lpeebackend.dto.response;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public record HistoriqueActionResponseDTO(
         String action,
@@ -12,5 +13,6 @@ public record HistoriqueActionResponseDTO(
         String matricule,
         String nomUser,
         LocalDate date,
-        LocalTime heure) {
+        LocalTime heure,
+        List<ChampModifieResponseDTO> changements) {
 }

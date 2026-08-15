@@ -44,12 +44,20 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
         Parametre parametre = parametreRepository.findById(requestDTO.getIdParametre())
                 .orElseThrow(() -> new ResourceNotFoundException("Paramètre introuvable."));
 
-        if (essaiParametreRepository.existsByEssaiIdEssaiAndParametreIdParametre(
-                requestDTO.getIdEssai(),
-                requestDTO.getIdParametre())) {
-            throw new DuplicateResourceException(
-                    "Cette association essai-paramètre existe déjà."
-            );
+        var existing = essaiParametreRepository.findByEssaiIdEssaiAndParametreIdParametre(
+                requestDTO.getIdEssai(), requestDTO.getIdParametre());
+        if (existing.isPresent()) {
+            EssaiParametre association = existing.get();
+            if (!isInactive(association)) {
+                throw new DuplicateResourceException("Cette association essai-paramètre existe déjà.");
+            }
+            association.setStatut(requestDTO.getStatut() == null ? "ACTIF" : requestDTO.getStatut());
+            association.setValeurCible(requestDTO.getValeurCible());
+            association.setAnnuleLe(null);
+            association.setAnnulePar(null);
+            association.setModifieLe(LocalDateTime.now());
+            association.setModifiePar(authenticatedUserService.getAuthenticatedUserId());
+            return essaiParametreMapper.toResponseDTO(essaiParametreRepository.save(association));
         }
 
         EssaiParametre essaiParametre = essaiParametreMapper.toEntity(requestDTO);
@@ -123,6 +131,7 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
 
         return essaiParametreRepository.findAll()
                 .stream()
+                .filter(entity -> !isInactive(entity))
                 .map(essaiParametreMapper::toResponseDTO)
                 .toList();
     }
@@ -133,6 +142,7 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
 
         return essaiParametreRepository.findByEssaiIdEssai(idEssai)
                 .stream()
+                .filter(entity -> !isInactive(entity))
                 .map(essaiParametreMapper::toResponseDTO)
                 .toList();
     }
@@ -143,6 +153,7 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
 
         return essaiParametreRepository.findByParametreIdParametre(idParametre)
                 .stream()
+                .filter(entity -> !isInactive(entity))
                 .map(essaiParametreMapper::toResponseDTO)
                 .toList();
     }
@@ -159,5 +170,9 @@ public class EssaiParametreServiceImpl implements EssaiParametreService {
         essaiParametre.setAnnuleLe(LocalDateTime.now());
         essaiParametre.setAnnulePar(authenticatedUserService.getAuthenticatedUserId());
         essaiParametreRepository.save(essaiParametre);
+    }
+
+    private boolean isInactive(EssaiParametre entity) {
+        return "INACTIF".equalsIgnoreCase(entity.getStatut());
     }
 }

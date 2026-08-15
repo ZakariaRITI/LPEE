@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EssaiParametreRepository extends JpaRepository<EssaiParametre, Long> {
@@ -13,5 +14,5 @@ public interface EssaiParametreRepository extends JpaRepository<EssaiParametre, 
 
     List<EssaiParametre> findByParametreIdParametre(Long idParametre);
 
-    boolean existsByEssaiIdEssaiAndParametreIdParametre(Long idEssai, Long idParametre);
+    Optional<EssaiParametre> findByEssaiIdEssaiAndParametreIdParametre(Long idEssai, Long idParametre);
 }

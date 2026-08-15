@@ -9,6 +9,28 @@ const actionLabels = {
   Suppression: "Suppression",
 };
 
+const displayValue = (value) => value == null || value === "" ? "" : `“${value}”`;
+
+const isEssayDetail = (field = "") => {
+  const normalized = field.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
+  return normalized === "essai" || normalized === "numero d’essai" || normalized === "numero essai";
+};
+
+function ChangeDetail({ item }) {
+  const changes = (item.changements || []).filter((change) => !isEssayDetail(change.champ));
+  if (!changes.length) return "—";
+  return <div className="historique-changes">
+    {changes.map((change, index) => <span className="historique-change" key={`${change.champ}-${index}`}>
+      <b>{change.champ}</b>
+      <span className="change-values">
+        {change.ancienneValeur != null && change.ancienneValeur !== "" && <span className="old-value">{displayValue(change.ancienneValeur)}</span>}
+        {change.ancienneValeur != null && change.ancienneValeur !== "" && change.nouvelleValeur != null && change.nouvelleValeur !== "" && <span className="change-arrow" aria-label="devient">→</span>}
+        {change.nouvelleValeur != null && change.nouvelleValeur !== "" && <span className="new-value">{displayValue(change.nouvelleValeur)}</span>}
+      </span>
+    </span>)}
+  </div>;
+}
+
 function Historique() {
   const [actions, setActions] = useState([]);
   const [search, setSearch] = useState("");
@@ -58,7 +80,7 @@ function Historique() {
       {error && <p className="historique-error" role="alert">{error}</p>}
       <div className="units-table-wrap"><table><thead><tr><th>Action</th><th>Essai concerné</th><th>Action sur</th><th>Détail</th><th>Matricule</th><th>Nom utilisateur</th><th>Date et heure</th></tr></thead><tbody>
         {isLoading ? <tr><td colSpan="7" className="table-state">Chargement de l’historique…</td></tr>
-          : filteredActions.length ? filteredActions.map((item, index) => <tr key={`${item.action}-${item.essaiConcerne}-${item.actionSur}-${item.detail}-${item.date}-${item.heure}-${index}`}><td><span className={`historique-action ${item.action.toLowerCase()}`}>{actionLabels[item.action] || item.action}</span></td><td><strong>{item.essaiConcerne || "—"}</strong></td><td><span className="historique-target">{item.actionSur}</span></td><td className="historique-detail">{item.detail || "—"}</td><td>{item.matricule}</td><td>{item.nomUser}</td><td>{formatDateTime(item)}</td></tr>)
+          : filteredActions.length ? filteredActions.map((item, index) => <tr key={`${item.action}-${item.essaiConcerne}-${item.actionSur}-${item.detail}-${item.date}-${item.heure}-${index}`}><td><span className={`historique-action ${item.action.toLowerCase()}`}>{actionLabels[item.action] || item.action}</span></td><td><strong>{item.essaiConcerne || "—"}</strong></td><td><span className="historique-target">{item.actionSur}</span></td><td className="historique-detail"><ChangeDetail item={item} /></td><td>{item.matricule}</td><td>{item.nomUser}</td><td>{formatDateTime(item)}</td></tr>)
             : <tr><td colSpan="7" className="table-state">Aucune action ne correspond aux filtres.</td></tr>}
       </tbody></table></div>
     </article>
