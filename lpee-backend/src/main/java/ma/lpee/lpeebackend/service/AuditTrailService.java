@@ -10,10 +10,14 @@ import ma.lpee.lpeebackend.entity.Utilisateur;
 import ma.lpee.lpeebackend.repository.EssaiRepository;
 import ma.lpee.lpeebackend.repository.DocumentRepository;
 import ma.lpee.lpeebackend.repository.EquipementRepository;
+import ma.lpee.lpeebackend.repository.FamilleProduitRepository;
 import ma.lpee.lpeebackend.repository.HistoriqueActionRepository;
+import ma.lpee.lpeebackend.repository.MarqueRepository;
 import ma.lpee.lpeebackend.repository.NormeRepository;
+import ma.lpee.lpeebackend.repository.OrganismeRepository;
 import ma.lpee.lpeebackend.repository.ParametreRepository;
 import ma.lpee.lpeebackend.repository.ProduitRepository;
+import ma.lpee.lpeebackend.repository.RegionRepository;
 import ma.lpee.lpeebackend.repository.UniteRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import org.springframework.security.core.Authentication;
@@ -35,6 +39,10 @@ public class AuditTrailService {
             Map.entry("idEssai", "Essai"), Map.entry("idEquipement", "Équipement"),
             Map.entry("idNorme", "Norme"), Map.entry("idParametre", "Paramètre"),
             Map.entry("idUnite", "Unité"), Map.entry("idDocument", "Document"),
+            Map.entry("idRegion", "Région"),
+            Map.entry("idFamille", "Famille de produit"),
+            Map.entry("idMarque", "Marque"),
+            Map.entry("idOrganisme", "Organisme"),
             Map.entry("valeurCible", "Valeur cible"), Map.entry("dateUtilisationDebut", "Début d’utilisation"),
             Map.entry("dateUtilisationFin", "Fin d’utilisation"), Map.entry("statutConformite", "Conformité"),
             Map.entry("dateEvaluation", "Date d’évaluation"), Map.entry("dateRealisation", "Date de réalisation"));
@@ -48,6 +56,10 @@ public class AuditTrailService {
     private final UtilisateurRepository utilisateurRepository;
     private final EssaiRepository essaiRepository;
     private final ProduitRepository produitRepository;
+    private final FamilleProduitRepository familleProduitRepository;
+    private final MarqueRepository marqueRepository;
+    private final OrganismeRepository organismeRepository;
+    private final RegionRepository regionRepository;
     private final EquipementRepository equipementRepository;
     private final NormeRepository normeRepository;
     private final ParametreRepository parametreRepository;
@@ -67,9 +79,9 @@ public class AuditTrailService {
         }
 
         List<ChampModifieResponseDTO> changements = switch (action) {
-            case "Creation" -> changements(action, Map.of(), newValues);
-            case "Suppression" -> changements(action, oldValues, Map.of());
-            default -> changements(action, oldValues, newValues);
+            case "Creation" -> changements(action, elementType, Map.of(), newValues);
+            case "Suppression" -> changements(action, elementType, oldValues, Map.of());
+            default -> changements(action, elementType, oldValues, newValues);
         };
 
         // Les mises à jour techniques et les appels répétés sans changement métier sont ignorés.
@@ -99,12 +111,26 @@ public class AuditTrailService {
         return statut != null && "INACTIF".equalsIgnoreCase(String.valueOf(statut).trim());
     }
 
-    private List<ChampModifieResponseDTO> changements(String action, Map<String, Object> avant, Map<String, Object> apres) {
+    private List<ChampModifieResponseDTO> changements(String action, String elementType,
+                                                       Map<String, Object> avant, Map<String, Object> apres) {
         Set<String> champs = new TreeSet<>();
         champs.addAll(avant.keySet());
         champs.addAll(apres.keySet());
         List<ChampModifieResponseDTO> result = new ArrayList<>();
+        boolean detailUnite = isDetailUnite(action, elementType, avant, apres);
+        boolean detailEquipement = isDetailEquipement(action, elementType, avant, apres);
+        boolean detailNorme = isDetailNorme(action, elementType, avant, apres);
+        boolean detailParametre = isDetailParametre(action, elementType, avant, apres);
         for (String champ : champs) {
+            if (detailUnite && "idUnite".equals(champ)) continue;
+            if ("idRegion".equals(champ) && !detailUnite) continue;
+            if (isDetailProduit(action, elementType) && "idProduit".equals(champ)) continue;
+            if ("idFamille".equals(champ) && !isDetailProduit(action, elementType)) continue;
+            if (detailEquipement && "idEquipement".equals(champ)) continue;
+            if ("idMarque".equals(champ) && !detailEquipement) continue;
+            if (detailNorme && "idNorme".equals(champ)) continue;
+            if ("idOrganisme".equals(champ) && !detailNorme) continue;
+            if (detailParametre && "idParametre".equals(champ)) continue;
             if (isIgnored(champ)) continue;
             String oldValue = displayField(champ, avant.get(champ));
             String newValue = displayField(champ, apres.get(champ));
@@ -114,6 +140,38 @@ public class AuditTrailService {
             result.add(new ChampModifieResponseDTO(LABELS.getOrDefault(champ, humanize(champ)), oldValue, newValue));
         }
         return result;
+    }
+
+    private boolean isDetailUnite(String action, String elementType,
+                                  Map<String, Object> avant, Map<String, Object> apres) {
+        return ("Creation".equals(action) || "Suppression".equals(action))
+                && "Unité".equals(elementType)
+                && (avant.containsKey("codeUnite") || apres.containsKey("codeUnite"));
+    }
+
+    private boolean isDetailProduit(String action, String elementType) {
+        return ("Creation".equals(action) || "Suppression".equals(action)) && "Produit".equals(elementType);
+    }
+
+    private boolean isDetailEquipement(String action, String elementType,
+                                       Map<String, Object> avant, Map<String, Object> apres) {
+        return ("Creation".equals(action) || "Suppression".equals(action))
+                && "Équipement".equals(elementType)
+                && (avant.containsKey("numeroSerie") || apres.containsKey("numeroSerie"));
+    }
+
+    private boolean isDetailNorme(String action, String elementType,
+                                  Map<String, Object> avant, Map<String, Object> apres) {
+        return ("Creation".equals(action) || "Suppression".equals(action))
+                && "Norme".equals(elementType)
+                && (avant.containsKey("codeNorme") || apres.containsKey("codeNorme"));
+    }
+
+    private boolean isDetailParametre(String action, String elementType,
+                                      Map<String, Object> avant, Map<String, Object> apres) {
+        return ("Creation".equals(action) || "Suppression".equals(action))
+                && "Paramètre".equals(elementType)
+                && (avant.containsKey("nomParametre") || apres.containsKey("nomParametre"));
     }
 
     @SuppressWarnings("unchecked")
@@ -182,6 +240,10 @@ public class AuditTrailService {
             case "idParametre" -> parametreRepository.findById(id).map(item -> item.getNomParametre()).orElse(display(value));
             case "idUnite" -> uniteRepository.findById(id).map(item -> item.getCodeUnite()).orElse(display(value));
             case "idDocument" -> documentRepository.findById(id).map(item -> item.getNumeroDocument()).orElse(display(value));
+            case "idRegion" -> regionRepository.findById(id).map(item -> item.getNomRegion()).orElse(display(value));
+            case "idFamille" -> familleProduitRepository.findById(id).map(item -> item.getNomFamille()).orElse(display(value));
+            case "idMarque" -> marqueRepository.findById(id).map(item -> item.getNomMarque()).orElse(display(value));
+            case "idOrganisme" -> organismeRepository.findById(id).map(item -> item.getNomOrganisme()).orElse(display(value));
             default -> display(value);
         };
     }

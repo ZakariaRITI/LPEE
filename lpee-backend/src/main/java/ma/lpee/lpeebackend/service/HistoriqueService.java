@@ -9,11 +9,15 @@ import ma.lpee.lpeebackend.entity.HistoriqueAction;
 import ma.lpee.lpeebackend.entity.Utilisateur;
 import ma.lpee.lpeebackend.repository.ConformiteNormeRepository;
 import ma.lpee.lpeebackend.repository.DocumentationEssaiRepository;
+import ma.lpee.lpeebackend.repository.EquipementRepository;
 import ma.lpee.lpeebackend.repository.EquipementEssaiRepository;
 import ma.lpee.lpeebackend.repository.EssaiParametreRepository;
 import ma.lpee.lpeebackend.repository.PublicationNormeRepository;
+import ma.lpee.lpeebackend.repository.ProduitRepository;
 import ma.lpee.lpeebackend.repository.RealisationEssaiRepository;
 import ma.lpee.lpeebackend.repository.HistoriqueActionRepository;
+import ma.lpee.lpeebackend.repository.NormeRepository;
+import ma.lpee.lpeebackend.repository.UniteRepository;
 import ma.lpee.lpeebackend.repository.UtilisateurRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +43,10 @@ public class HistoriqueService {
     private final RealisationEssaiRepository realisationEssaiRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final HistoriqueActionRepository historiqueActionRepository;
+    private final EquipementRepository equipementRepository;
+    private final NormeRepository normeRepository;
+    private final ProduitRepository produitRepository;
+    private final UniteRepository uniteRepository;
     private final ObjectMapper objectMapper;
     private final AuditTrailService auditTrailService;
 
@@ -137,6 +145,13 @@ public class HistoriqueService {
                     .filter(change -> !"Statut".equalsIgnoreCase(change.champ()))
                     .map(auditTrailService::rendreLisible)
                     .toList();
+            changements = adapterDetailUnite(entity, changements);
+            changements = adapterDetailProduit(entity, changements);
+            changements = adapterDetailEquipement(entity, changements);
+            changements = adapterDetailNorme(entity, changements);
+            changements = adapterDetailParametre(entity, changements);
+            changements = adapterRealisationEssai(entity, changements);
+            changements = adapterEquipementRealisation(entity, changements);
         } catch (Exception ignored) {
             changements = List.of();
         }
@@ -144,6 +159,141 @@ public class HistoriqueService {
                 normaliserAction(entity.getAction()), entity.getNumeroEssai(), entity.getElementType(), detail(entity, changements),
                 entity.getIdUser(), entity.getMatricule(), entity.getNomUser(),
                 entity.getDateHeure().toLocalDate(), entity.getDateHeure().toLocalTime(), changements);
+    }
+
+    private List<ChampModifieResponseDTO> adapterDetailUnite(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        String action = normaliserAction(entity.getAction());
+        boolean champsUnite = changements.stream().anyMatch(change -> "code Unite".equals(change.champ()));
+        if (!("Creation".equals(action) || "Suppression".equals(action))
+                || !"Unité".equals(entity.getElementType()) || !champsUnite) {
+            return changements;
+        }
+
+        List<ChampModifieResponseDTO> detail = new ArrayList<>(changements.stream()
+                .filter(change -> !"Unité".equals(change.champ()))
+                .toList());
+        boolean regionPresente = detail.stream().anyMatch(change -> "Région".equals(change.champ()));
+        if (!regionPresente && entity.getElementId() != null) {
+            uniteRepository.findById(entity.getElementId())
+                    .map(unite -> unite.getRegion().getNomRegion())
+                    .ifPresent(nomRegion -> detail.add(new ChampModifieResponseDTO("Région", null, nomRegion)));
+        }
+        return detail;
+    }
+
+    private List<ChampModifieResponseDTO> adapterDetailProduit(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        String action = normaliserAction(entity.getAction());
+        if (!("Creation".equals(action) || "Suppression".equals(action)) || !"Produit".equals(entity.getElementType())) {
+            return changements;
+        }
+
+        List<ChampModifieResponseDTO> detail = new ArrayList<>(changements.stream()
+                .filter(change -> !"Produit".equals(change.champ()))
+                .toList());
+        boolean famillePresente = detail.stream()
+                .anyMatch(change -> "Famille de produit".equals(change.champ()));
+        if (!famillePresente && entity.getElementId() != null) {
+            produitRepository.findById(entity.getElementId())
+                    .map(produit -> produit.getFamilleProduit().getNomFamille())
+                    .ifPresent(nomFamille -> detail.add(
+                            new ChampModifieResponseDTO("Famille de produit", null, nomFamille)));
+        }
+        return detail;
+    }
+
+    private List<ChampModifieResponseDTO> adapterDetailEquipement(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        String action = normaliserAction(entity.getAction());
+        boolean champsEquipement = changements.stream().anyMatch(change -> "numero Serie".equals(change.champ()));
+        if (!("Creation".equals(action) || "Suppression".equals(action))
+                || !"Équipement".equals(entity.getElementType()) || !champsEquipement) {
+            return changements;
+        }
+
+        List<ChampModifieResponseDTO> detail = new ArrayList<>(changements.stream()
+                .filter(change -> !"Équipement".equals(change.champ()))
+                .toList());
+        boolean marquePresente = detail.stream().anyMatch(change -> "Marque".equals(change.champ()));
+        if (!marquePresente && entity.getElementId() != null) {
+            equipementRepository.findById(entity.getElementId())
+                    .map(equipement -> equipement.getMarque().getNomMarque())
+                    .ifPresent(nomMarque -> detail.add(
+                            new ChampModifieResponseDTO("Marque", null, nomMarque)));
+        }
+        return detail;
+    }
+
+    private List<ChampModifieResponseDTO> adapterDetailNorme(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        String action = normaliserAction(entity.getAction());
+        boolean champsDeNorme = changements.stream().anyMatch(change ->
+                "code Norme".equals(change.champ()) || "Code norme".equals(change.champ()));
+        if (!("Creation".equals(action) || "Suppression".equals(action))
+                || !"Norme".equals(entity.getElementType()) || !champsDeNorme) {
+            return changements;
+        }
+
+        List<ChampModifieResponseDTO> detail = new ArrayList<>(changements.stream()
+                .filter(change -> !"Norme".equals(change.champ()))
+                .toList());
+        boolean organismePresent = detail.stream().anyMatch(change -> "Organisme".equals(change.champ()));
+        if (!organismePresent && entity.getElementId() != null) {
+            normeRepository.findById(entity.getElementId())
+                    .map(norme -> norme.getOrganisme().getNomOrganisme())
+                    .ifPresent(nomOrganisme -> detail.add(
+                            new ChampModifieResponseDTO("Organisme", null, nomOrganisme)));
+        }
+        return detail;
+    }
+
+    private List<ChampModifieResponseDTO> adapterDetailParametre(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        String action = normaliserAction(entity.getAction());
+        boolean nomParametrePresent = changements.stream().anyMatch(change ->
+                "nom Parametre".equals(change.champ()) || "Nom paramètre".equals(change.champ()));
+        if (!("Creation".equals(action) || "Suppression".equals(action))
+                || !"Paramètre".equals(entity.getElementType()) || !nomParametrePresent) {
+            return changements;
+        }
+        return changements.stream()
+                .filter(change -> !"Paramètre".equals(change.champ()))
+                .toList();
+    }
+
+    private List<ChampModifieResponseDTO> adapterRealisationEssai(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        boolean realisation = "Unité".equals(entity.getElementType()) && changements.stream()
+                .anyMatch(change -> "Date de réalisation".equals(change.champ()));
+        if (!realisation) return changements;
+
+        List<ChampModifieResponseDTO> detail = new ArrayList<>(changements.stream()
+                .filter(change -> !"Région".equals(change.champ()) && !"Unité".equals(change.champ()))
+                .toList());
+        if (entity.getElementId() != null) {
+            uniteRepository.findById(entity.getElementId())
+                    .map(unite -> unite.getNomUnite())
+                    .ifPresent(nomUnite -> detail.add(new ChampModifieResponseDTO(
+                            "Unité", null, nomUnite)));
+        }
+        return detail;
+    }
+
+    private List<ChampModifieResponseDTO> adapterEquipementRealisation(
+            HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
+        boolean utilisation = "Équipement".equals(entity.getElementType()) && changements.stream()
+                .anyMatch(change -> "Début d’utilisation".equals(change.champ())
+                        || "Fin d’utilisation".equals(change.champ()));
+        if (!utilisation || entity.getElementId() == null) return changements;
+
+        return equipementRepository.findById(entity.getElementId()).map(equipement -> {
+            List<ChampModifieResponseDTO> detail = new ArrayList<>(changements);
+            detail.add(new ChampModifieResponseDTO("Numéro de série", null, equipement.getNumeroSerie()));
+            detail.add(new ChampModifieResponseDTO("Désignation", null, equipement.getDesignation()));
+            detail.add(new ChampModifieResponseDTO("Modèle", null, equipement.getModele()));
+            return detail;
+        }).orElse(changements);
     }
 
     private String detail(HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {

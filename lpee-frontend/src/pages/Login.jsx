@@ -117,9 +117,8 @@ function Login({ onLogin }) {
         </div>
         <img className="lpee-worksite" src="/images/LPEE-image.jpg" alt="Intervention LPEE sur un chantier" />
         <div className="visual-copy">
-          <p className="visual-kicker">Référentiel des essais</p>
-          <h1>Maîtrisez vos essais de laboratoire.</h1>
-          <p>Centralisez, organisez et suivez l’ensemble du référentiel des essais, normes, équipements et documents de votre laboratoire.</p>
+          <h1>Référentiel des Essais</h1>
+          <p>Gérez et consultez vos essais simplement.</p>
         </div>
       </section>
 
@@ -128,7 +127,7 @@ function Login({ onLogin }) {
           <div className="mobile-brand"><img src="/images/Lpee-logo.png" alt="LPEE" /></div>
           <p className="eyebrow">Espace sécurisé</p>
           <h2>Bienvenue</h2>
-          <p className="intro">Connectez-vous pour accéder à votre tableau de bord.</p>
+          <p className="intro">Connectez-vous pour accéder à votre espace.</p>
 
           <form onSubmit={handleSubmit} noValidate>
             <label htmlFor="matricule">Matricule</label>

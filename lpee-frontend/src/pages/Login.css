@@ -17,7 +17,7 @@
   grid-template-rows: auto 1fr auto;
   min-height: 100svh;
   overflow: hidden;
-  padding: clamp(2rem, 4.2vw, 4.5rem);
+  padding: clamp(2rem, 4vw, 4.25rem);
   color: #fff;
   background: var(--login-navy);
 }
@@ -31,14 +31,14 @@
 
 .login-visual::before {
   inset: 0;
-  z-index: -2;
+  z-index: 0;
   background:
-    radial-gradient(circle at 85% 10%, rgba(28, 145, 203, .34), transparent 35%),
-    linear-gradient(140deg, #041f3c 0%, #074776 52%, #06355f 100%);
+    linear-gradient(180deg, rgba(3, 29, 53, .2) 0%, rgba(3, 34, 62, .08) 42%, rgba(3, 28, 52, .88) 100%),
+    linear-gradient(90deg, rgba(4, 39, 70, .52), rgba(4, 55, 91, .08));
 }
 
 .login-visual::after {
-  z-index: -1;
+  z-index: 1;
   width: 32rem;
   height: 32rem;
   right: -14rem;
@@ -53,18 +53,16 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  width: fit-content;
+  width: min(100%, 430px);
+  min-height: 150px;
 }
 
 .lpee-logo {
-  width: clamp(170px, 17vw, 245px);
-  height: 82px;
+  width: clamp(290px, 28vw, 430px);
+  height: clamp(120px, 12vw, 170px);
   object-fit: contain;
   object-position: left center;
-  filter: brightness(0) invert(1);
-  transform: scale(1.7);
-  transform-origin: left center;
-  transition: transform .4s ease;
+  filter: brightness(0) invert(1) drop-shadow(0 8px 20px rgba(0, 20, 38, .2));
 }
 
 .lpee-worksite {
@@ -74,8 +72,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: .3;
-  filter: saturate(.72) contrast(1.06);
+  opacity: .72;
+  filter: saturate(.88) contrast(1.06);
   animation: login-image-in 1s ease-out both;
 }
 
@@ -83,8 +81,8 @@
   position: relative;
   z-index: 2;
   align-self: end;
-  max-width: 680px;
-  padding-top: 8rem;
+  max-width: 590px;
+  padding: 2rem 0 .4rem;
   animation: login-copy-in .75s .12s ease-out both;
 }
 
@@ -93,7 +91,7 @@
   display: block;
   width: 48px;
   height: 3px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   border-radius: 999px;
   background: var(--login-gold);
 }
@@ -109,9 +107,9 @@
 }
 
 .visual-copy h1 {
-  max-width: 650px;
+  max-width: 590px;
   margin: 0;
-  font-size: clamp(2.65rem, 4.7vw, 5rem);
+  font-size: clamp(2.5rem, 4.2vw, 4.5rem);
   font-weight: 750;
   line-height: 1.02;
   letter-spacing: -.055em;
@@ -119,11 +117,11 @@
 }
 
 .visual-copy p:last-child {
-  max-width: 600px;
-  margin: 1.35rem 0 0;
-  color: rgba(239, 247, 253, .82);
-  font-size: clamp(.96rem, 1.15vw, 1.08rem);
-  line-height: 1.72;
+  max-width: 430px;
+  margin: 1rem 0 0;
+  color: rgba(245, 250, 254, .9);
+  font-size: clamp(1rem, 1.25vw, 1.16rem);
+  line-height: 1.55;
 }
 
 .login-panel {
@@ -320,7 +318,7 @@
 .password-modal-intro { margin: .75rem 0 1.5rem; color: #667b8e; font-size: .92rem; line-height: 1.6; }
 .password-modal .submit-button { width: 100%; }
 
-@keyframes login-image-in { from { opacity: 0; transform: scale(1.045); } to { opacity: .3; transform: scale(1); } }
+@keyframes login-image-in { from { opacity: 0; transform: scale(1.045); } to { opacity: .72; transform: scale(1); } }
 @keyframes login-copy-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes login-card-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }

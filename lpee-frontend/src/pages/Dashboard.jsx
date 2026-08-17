@@ -62,7 +62,7 @@ function DonutChart({ regional, specialized }) {
       <circle className="donut-segment regional" cx="21" cy="21" r="15.9155" strokeDasharray={`${regionalPercent} ${100 - regionalPercent}`} />
       <circle className="donut-segment specialized" cx="21" cy="21" r="15.9155" strokeDasharray={`${specializedPercent} ${100 - specializedPercent}`} strokeDashoffset={-regionalPercent} />
       <text x="21" y="20" className="donut-number">{total}</text>
-      <text x="21" y="25" className="donut-label">essais</text>
+      <text x="21" y="25" className="donut-label">réalisations</text>
     </svg>
     <div className="distribution-legend">
       <div><i className="regional-dot" /><span>Unités régionales</span><strong>{regionalPercent}%</strong></div>
@@ -152,13 +152,16 @@ function Dashboard({ onLogout }) {
       <button className="mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu"><Menu /></button>
       <Link className="topbar-brand" to="/dashboard" aria-label="Accueil LPEE"><span className="logo-display"><img src="/images/lpee-logo2.png" alt="LPEE" /></span></Link>
       <div className="topbar-title"><span>Référentiel LPEE</span><small>Gestion des essais de laboratoire</small></div>
-      <div className="profile-area">
-        <button className="profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={isProfileOpen} aria-label="Ouvrir le profil utilisateur">
-          <span className="profile-avatar"><UserRound size={22} /></span>
-          <span className="profile-details"><strong>{currentUser?.nomUser || currentUser?.email || "Chargement…"}</strong><small>{session?.role || ""}</small></span>
-          <ChevronDown size={17} />
-        </button>
-        {isProfileOpen && <div className="profile-menu"><strong>{currentUser?.nomUser || currentUser?.email}</strong><span>{currentUser?.email}</span><small>{session?.role}</small><Link to="/dashboard/profil" onClick={() => setProfileOpen(false)}>Voir le profil</Link></div>}
+      <div className="topbar-actions">
+        <div className="profile-area">
+          <button className="profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={isProfileOpen} aria-label="Ouvrir le profil utilisateur">
+            <span className="profile-avatar"><UserRound size={22} /></span>
+            <span className="profile-details"><strong>{currentUser?.nomUser || currentUser?.email || "Chargement…"}</strong><small>{session?.role || ""}</small></span>
+            <ChevronDown size={17} />
+          </button>
+          {isProfileOpen && <div className="profile-menu"><strong>{currentUser?.nomUser || currentUser?.email}</strong><span>{currentUser?.email}</span><small>{session?.role}</small><Link to="/dashboard/profil" onClick={() => setProfileOpen(false)}>Voir le profil</Link></div>}
+        </div>
+        <button className="topbar-logout" onClick={logout} aria-label="Déconnexion"><LogOut size={18} /><span>Déconnexion</span></button>
       </div>
     </header>
 
@@ -189,8 +192,8 @@ function Dashboard({ onLogout }) {
         <article className="kpi-card"><span className="kpi-icon purple"><Building2 /></span><div><p>Unité spécialisée</p><strong>{isLoading ? "—" : stats.specialisees}</strong></div></article>
       </section>
       <section className="charts-grid">
-        <article className="chart-card"><div className="chart-heading"><div><h2>Nombre d’essais par unité</h2><p>Réalisations d’essais regroupées par unité.</p></div><Building2 size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <BarListChart data={essaisParUnite} ariaLabel="Nombre d’essais par unité" emptyMessage="Aucune réalisation d’essai disponible." />}</article>
-        <article className="chart-card"><div className="chart-heading"><div><h2>Répartition des essais par type d’unité</h2><p>Part des essais réalisés par les unités régionales et spécialisées.</p></div><PieChart size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <DonutChart regional={essaisParTypeUnite.regional} specialized={essaisParTypeUnite.specialized} />}</article>
+        <article className="chart-card"><div className="chart-heading"><div><h2>Réalisations d’essais par unité</h2><p>Réalisations d’essais regroupées par unité.</p></div><Building2 size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <BarListChart data={essaisParUnite} ariaLabel="Nombre d’essais par unité" emptyMessage="Aucune réalisation d’essai disponible." />}</article>
+        <article className="chart-card"><div className="chart-heading"><div><h2>Répartition des réalisations par type d’unité</h2><p>Part des essais réalisés par les unités régionales et spécialisées.</p></div><PieChart size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <DonutChart regional={essaisParTypeUnite.regional} specialized={essaisParTypeUnite.specialized} />}</article>
       </section>
       </>}
     </main>
