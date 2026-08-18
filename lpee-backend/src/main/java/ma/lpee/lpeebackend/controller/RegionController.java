@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.RegionRequestDTO;
 import ma.lpee.lpeebackend.dto.response.RegionResponseDTO;
 import ma.lpee.lpeebackend.service.RegionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,11 +39,24 @@ public class RegionController {
         );
     }
 
-    @GetMapping
+    @GetMapping(params = {"!page", "!size"})
     public ResponseEntity<List<RegionResponseDTO>> findAll() {
 
         return ResponseEntity.ok(
                 regionService.findAll()
+        );
+    }
+
+    @GetMapping(params = {"page", "size"})
+    public ResponseEntity<Page<RegionResponseDTO>> findPage(
+            Pageable pageable,
+            @RequestParam(required = false, defaultValue = "") String codeRegion) {
+
+        return ResponseEntity.ok(
+                regionService.findPage(
+                        PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), 5), pageable.getSort()),
+                        codeRegion
+                )
         );
     }
 

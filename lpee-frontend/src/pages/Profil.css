@@ -3,3 +3,4 @@
 .profile-card .form-card-heading p { margin: .35rem 0 0; color: #71859a; font-size: .88rem; }
 .profile-card .save-button { display: inline-flex; align-items: center; gap: .45rem; }
 .profile-card .save-button:disabled { cursor: wait; opacity: .7; }
+.profile-password-info { margin: 0; padding: .8rem 1rem; border: 1px solid #b8dceb; border-radius: 8px; color: #075f99; background: #eaf5fb; font-size: .88rem; line-height: 1.5; }

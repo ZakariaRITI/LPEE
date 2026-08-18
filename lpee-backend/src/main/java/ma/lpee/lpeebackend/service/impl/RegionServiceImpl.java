@@ -8,6 +8,8 @@ import ma.lpee.lpeebackend.exception.ResourceNotFoundException;
 import ma.lpee.lpeebackend.mapper.RegionMapper;
 import ma.lpee.lpeebackend.repository.RegionRepository;
 import ma.lpee.lpeebackend.service.RegionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +53,17 @@ public class RegionServiceImpl implements RegionService {
                 .stream()
                 .map(regionMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RegionResponseDTO> findPage(Pageable pageable, String codeRegion) {
+
+        Page<Region> page = codeRegion == null || codeRegion.isBlank()
+                ? regionRepository.findAll(pageable)
+                : regionRepository.findByCodeRegionContainingIgnoreCase(codeRegion.trim(), pageable);
+
+        return page.map(regionMapper::toResponseDTO);
     }
 
     @Override

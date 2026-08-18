@@ -113,18 +113,17 @@ function Login({ onLogin }) {
     <main className="login-page">
       <section className="login-visual" aria-label="Laboratoire Public d'Essais et d'Études">
         <div className="visual-content">
-          <img className="lpee-logo" src="/images/Lpee-logo.png" alt="LPEE" />
+          <img className="lpee-logo" src="/images/logo_LPEE.png" alt="LPEE" />
         </div>
         <img className="lpee-worksite" src="/images/LPEE-image.jpg" alt="Intervention LPEE sur un chantier" />
         <div className="visual-copy">
           <h1>Référentiel des Essais</h1>
-          <p>Gérez et consultez vos essais simplement.</p>
         </div>
       </section>
 
       <section className="login-panel">
         <div className="login-card">
-          <div className="mobile-brand"><img src="/images/Lpee-logo.png" alt="LPEE" /></div>
+          <div className="mobile-brand"><img src="/images/logo_LPEE.png" alt="LPEE" /></div>
           <p className="eyebrow">Espace sécurisé</p>
           <h2>Bienvenue</h2>
           <p className="intro">Connectez-vous pour accéder à votre espace.</p>

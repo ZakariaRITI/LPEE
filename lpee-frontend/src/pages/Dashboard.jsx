@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart3, Beaker, BookOpen, Building2, ChevronDown, ChevronRight,
-  FileText, LayoutDashboard, LogOut, Menu, PieChart, Settings, UserRound, Wrench, X,
+  BarChart3, Beaker, BookOpen, Boxes, Building2, ChevronDown, ChevronRight,
+  FileText, LayoutDashboard, LogOut, Menu, Settings, UserRound, Wrench, X,
 } from "lucide-react";
 import api from "../services/api";
 import { clearSession } from "../services/auth";
@@ -50,23 +50,32 @@ function BarListChart({ data, ariaLabel, emptyMessage }) {
   </div>;
 }
 
-function DonutChart({ regional, specialized }) {
-  const total = regional + specialized;
-  if (!total) return <p className="chart-empty">Aucune réalisation liée à une unité régionale ou spécialisée.</p>;
+const productChartColors = ["#0877b6", "#f2b632", "#20a47b", "#7658c9", "#e46f61", "#36a4c7", "#d78b2d", "#4f78c4"];
 
-  const regionalPercent = Math.round((regional / total) * 100);
-  const specializedPercent = 100 - regionalPercent;
-  return <div className="distribution-chart">
-    <svg viewBox="0 0 42 42" role="img" aria-label="Répartition des essais par type d’unité">
+function ProductDonutChart({ data }) {
+  const entries = Object.entries(data).filter(([, value]) => value > 0);
+  const total = entries.reduce((sum, [, value]) => sum + value, 0);
+  if (!total) return <p className="chart-empty">Aucun produit associé à une unité.</p>;
+
+  let offset = 0;
+  return <div className="product-donut-chart">
+    <svg viewBox="0 0 42 42" role="img" aria-label="Répartition des produits par unité">
       <circle className="donut-base" cx="21" cy="21" r="15.9155" />
-      <circle className="donut-segment regional" cx="21" cy="21" r="15.9155" strokeDasharray={`${regionalPercent} ${100 - regionalPercent}`} />
-      <circle className="donut-segment specialized" cx="21" cy="21" r="15.9155" strokeDasharray={`${specializedPercent} ${100 - specializedPercent}`} strokeDashoffset={-regionalPercent} />
-      <text x="21" y="20" className="donut-number">{total}</text>
-      <text x="21" y="25" className="donut-label">réalisations</text>
+      {entries.map(([label, value], index) => {
+        const percentage = (value / total) * 100;
+        const segmentOffset = offset;
+        offset += percentage;
+        return <circle key={label} className="product-donut-segment" cx="21" cy="21" r="15.9155" pathLength="100" stroke={productChartColors[index % productChartColors.length]} strokeDasharray={`${percentage} ${100 - percentage}`} strokeDashoffset={-segmentOffset} />;
+      })}
+      <text className="product-donut-total" x="21" y="20">{total}</text>
+      <text className="product-donut-label" x="21" y="25">produits</text>
     </svg>
-    <div className="distribution-legend">
-      <div><i className="regional-dot" /><span>Unités régionales</span><strong>{regionalPercent}%</strong></div>
-      <div><i className="specialized-dot" /><span>Unités spécialisées</span><strong>{specializedPercent}%</strong></div>
+    <div className="product-donut-legend">
+      {entries.map(([label, value], index) => <div key={label}>
+        <i style={{ background: productChartColors[index % productChartColors.length] }} />
+        <span title={label}>{label}</span>
+        <strong>{value} · {Math.round((value / total) * 100)}%</strong>
+      </div>)}
     </div>
   </div>;
 }
@@ -74,6 +83,7 @@ function DonutChart({ regional, specialized }) {
 function Dashboard({ onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const profileAreaRef = useRef(null);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState(() => new Set(menuGroups.map((group) => group.label)));
@@ -115,6 +125,17 @@ function Dashboard({ onLogout }) {
     return () => { active = false; };
   }, [navigate, onLogout, session?.idUser]);
 
+  useEffect(() => {
+    if (!isProfileOpen) return undefined;
+
+    const closeProfileOnOutsideClick = (event) => {
+      if (!profileAreaRef.current?.contains(event.target)) setProfileOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeProfileOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeProfileOnOutsideClick);
+  }, [isProfileOpen]);
+
   const stats = useMemo(() => {
     const normalize = (value) => (value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     return {
@@ -128,15 +149,22 @@ function Dashboard({ onLogout }) {
     const unite = data.unites.find((item) => item.idUnite === realisation.idUnite);
     return unite?.nomUnite || unite?.codeUnite || `Unité #${realisation.idUnite}`;
   }), [data.realisations, data.unites]);
-  const essaisParTypeUnite = useMemo(() => {
-    const normalize = (value) => (value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-    return data.realisations.reduce((counts, realisation) => {
-      const type = normalize(data.unites.find((unite) => unite.idUnite === realisation.idUnite)?.typeUnite);
-      if (type === "regionale") counts.regional += 1;
-      if (type === "specialisee") counts.specialized += 1;
-      return counts;
-    }, { regional: 0, specialized: 0 });
-  }, [data.realisations, data.unites]);
+  const produitsParUnite = useMemo(() => {
+    const essaisById = new Map(data.essais.map((essai) => [essai.idEssai, essai]));
+    const unitesById = new Map(data.unites.map((unite) => [unite.idUnite, unite]));
+    const productsByUnit = new Map();
+
+    data.realisations.forEach((realisation) => {
+      const idProduit = essaisById.get(realisation.idEssai)?.idProduit;
+      if (!idProduit) return;
+      const unite = unitesById.get(realisation.idUnite);
+      const label = unite?.nomUnite || unite?.codeUnite || `Unité #${realisation.idUnite}`;
+      if (!productsByUnit.has(label)) productsByUnit.set(label, new Set());
+      productsByUnit.get(label).add(idProduit);
+    });
+
+    return Object.fromEntries([...productsByUnit].map(([label, products]) => [label, products.size]));
+  }, [data.essais, data.realisations, data.unites]);
   const activePath = location.pathname.replace("/dashboard/", "") || "accueil";
 
   const toggleMenu = (label) => setOpenMenus((current) => {
@@ -150,10 +178,10 @@ function Dashboard({ onLogout }) {
   return <div className="dashboard-shell">
     <header className="topbar">
       <button className="mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu"><Menu /></button>
-      <Link className="topbar-brand" to="/dashboard" aria-label="Accueil LPEE"><span className="logo-display"><img src="/images/lpee-logo2.png" alt="LPEE" /></span></Link>
+      <Link className="topbar-brand" to="/dashboard" aria-label="Accueil LPEE"><span className="logo-display"><img src="/images/logo_LPEE.png" alt="LPEE" /></span></Link>
       <div className="topbar-title"><span>Référentiel LPEE</span><small>Gestion des essais de laboratoire</small></div>
       <div className="topbar-actions">
-        <div className="profile-area">
+        <div className="profile-area" ref={profileAreaRef}>
           <button className="profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={isProfileOpen} aria-label="Ouvrir le profil utilisateur">
             <span className="profile-avatar"><UserRound size={22} /></span>
             <span className="profile-details"><strong>{currentUser?.nomUser || currentUser?.email || "Chargement…"}</strong><small>{session?.role || ""}</small></span>
@@ -192,8 +220,8 @@ function Dashboard({ onLogout }) {
         <article className="kpi-card"><span className="kpi-icon purple"><Building2 /></span><div><p>Unité spécialisée</p><strong>{isLoading ? "—" : stats.specialisees}</strong></div></article>
       </section>
       <section className="charts-grid">
-        <article className="chart-card"><div className="chart-heading"><div><h2>Réalisations d’essais par unité</h2><p>Réalisations d’essais regroupées par unité.</p></div><Building2 size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <BarListChart data={essaisParUnite} ariaLabel="Nombre d’essais par unité" emptyMessage="Aucune réalisation d’essai disponible." />}</article>
-        <article className="chart-card"><div className="chart-heading"><div><h2>Répartition des réalisations par type d’unité</h2><p>Part des essais réalisés par les unités régionales et spécialisées.</p></div><PieChart size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <DonutChart regional={essaisParTypeUnite.regional} specialized={essaisParTypeUnite.specialized} />}</article>
+        <article className="chart-card"><div className="chart-heading"><div><h2>Répartition des essais par unité</h2><p>Essais regroupés par unité.</p></div><Building2 size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <BarListChart data={essaisParUnite} ariaLabel="Nombre d’essais par unité" emptyMessage="Aucun essai disponible." />}</article>
+        <article className="chart-card"><div className="chart-heading"><div><h2>Répartition des produits par unité</h2><p>Produits distincts associés aux essais de chaque unité.</p></div><Boxes size={21} /></div>{isLoading ? <p className="chart-empty">Chargement des données…</p> : <ProductDonutChart data={produitsParUnite} />}</article>
       </section>
       </>}
     </main>

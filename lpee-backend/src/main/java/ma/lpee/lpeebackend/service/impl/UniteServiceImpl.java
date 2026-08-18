@@ -10,6 +10,8 @@ import ma.lpee.lpeebackend.mapper.UniteMapper;
 import ma.lpee.lpeebackend.repository.RegionRepository;
 import ma.lpee.lpeebackend.repository.UniteRepository;
 import ma.lpee.lpeebackend.service.UniteService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +68,18 @@ public class UniteServiceImpl implements UniteService {
                 .stream()
                 .map(uniteMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UniteResponseDTO> getPage(Pageable pageable, String codeUnite) {
+
+        Page<Unite> page = codeUnite == null || codeUnite.isBlank()
+                ? uniteRepository.findAll(pageable)
+                : uniteRepository.findByCodeUniteContainingIgnoreCase(codeUnite.trim(), pageable);
+
+        return page
+                .map(uniteMapper::toResponseDTO);
     }
 
     @Override

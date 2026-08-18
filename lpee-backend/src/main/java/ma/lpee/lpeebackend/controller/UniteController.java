@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import ma.lpee.lpeebackend.dto.request.UniteRequestDTO;
 import ma.lpee.lpeebackend.dto.response.UniteResponseDTO;
 import ma.lpee.lpeebackend.service.UniteService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,11 +43,24 @@ public class UniteController {
     }
 
 
-    @GetMapping
+    @GetMapping(params = {"!page", "!size"})
     public ResponseEntity<List<UniteResponseDTO>> getAll() {
 
         return ResponseEntity.ok(
                 uniteService.getAll()
+        );
+    }
+
+    @GetMapping(params = {"page", "size"})
+    public ResponseEntity<Page<UniteResponseDTO>> getPage(
+            Pageable pageable,
+            @RequestParam(required = false, defaultValue = "") String codeUnite) {
+
+        return ResponseEntity.ok(
+                uniteService.getPage(
+                        PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), 5), pageable.getSort()),
+                        codeUnite
+                )
         );
     }
 
