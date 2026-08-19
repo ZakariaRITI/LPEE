@@ -12,7 +12,11 @@ const unitsPerPage = 5;
 function Unite() {
   const formRef = useRef(null);
   const listRef = useRef(null);
+  const unitTableRef = useRef(null);
+  const regionTableRef = useRef(null);
   const shouldScrollToListRef = useRef(false);
+  const shouldScrollToUnitTableRef = useRef(false);
+  const shouldScrollToRegionTableRef = useRef(false);
   const highlightTimeoutRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const unitsRequestRef = useRef(0);
@@ -119,6 +123,20 @@ function Unite() {
   }, [isListVisible, isListExpanded, isLoadingUnits]);
 
   useEffect(() => {
+    if (isLoadingUnits || !shouldScrollToUnitTableRef.current || !unitTableRef.current) return;
+    shouldScrollToUnitTableRef.current = false;
+    const tableTop = unitTableRef.current.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, tableTop - 105), behavior: "smooth" });
+  }, [isLoadingUnits, unitPage]);
+
+  useEffect(() => {
+    if (isLoadingRegions || !shouldScrollToRegionTableRef.current || !regionTableRef.current) return;
+    shouldScrollToRegionTableRef.current = false;
+    const tableTop = regionTableRef.current.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, tableTop - 105), behavior: "smooth" });
+  }, [isLoadingRegions, regionPage]);
+
+  useEffect(() => {
     if (!editSuccessSequence) return undefined;
     const frame = requestAnimationFrame(() => {
       const scrollContainer = document.scrollingElement || document.documentElement;
@@ -208,8 +226,9 @@ function Unite() {
 
   const resetForm = () => { setForm(initialForm); setEditingId(null); setErrors({}); setMessage(""); };
   const toggleList = () => { const next = !isListVisible; setListVisible(next); if (next) { shouldScrollToListRef.current = true; setListExpanded(true); loadUnits(unitPage, unitCodeSearch); } };
-  const changeUnitPage = (page) => { if (page < 0 || page >= unitTotalPages || page === unitPage) return; loadUnits(page, unitCodeSearch); };
+  const changeUnitPage = (page) => { if (page < 0 || page >= unitTotalPages || page === unitPage) return; shouldScrollToUnitTableRef.current = true; loadUnits(page, unitCodeSearch); };
   const handleUnitSearch = ({ target: { value } }) => {
+    shouldScrollToUnitTableRef.current = true;
     setUnitCodeSearch(value);
     unitsRequestRef.current += 1;
     clearTimeout(searchTimeoutRef.current);
@@ -268,8 +287,9 @@ function Unite() {
       scrollContainer.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     });
   };
-  const changeRegionPage = (page) => { if (page < 0 || page >= regionTotalPages || page === regionPage) return; loadRegionPage(page, regionCodeSearch); };
+  const changeRegionPage = (page) => { if (page < 0 || page >= regionTotalPages || page === regionPage) return; shouldScrollToRegionTableRef.current = true; loadRegionPage(page, regionCodeSearch); };
   const handleRegionSearch = ({ target: { value } }) => {
+    shouldScrollToRegionTableRef.current = true;
     setRegionCodeSearch(value);
     regionsRequestRef.current += 1;
     clearTimeout(regionSearchTimeoutRef.current);
@@ -373,7 +393,7 @@ function Unite() {
       <div className="list-card-heading"><div><h2>Liste des unités</h2><p>{isLoadingUnits ? "Chargement…" : `${unitTotalElements} unité(s) disponible(s)`}</p></div><button className="form-collapse-button" type="button" onClick={() => setListExpanded((expanded) => !expanded)} aria-expanded={isListExpanded} aria-label={isListExpanded ? "Réduire la liste des unités" : "Afficher la liste des unités"}>{isListExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button></div>
       {isListExpanded && <>
         <div className="unit-list-search"><label htmlFor="unit-code-search">Rechercher par Code Unité</label><div><Search size={18} aria-hidden="true" /><input id="unit-code-search" type="search" value={unitCodeSearch} onChange={handleUnitSearch} placeholder="Saisissez un code unité" /></div></div>
-        <div className="units-table-wrap"><table><thead><tr><th>Code</th><th>Unité</th><th>Type</th><th>Ville</th><th>Téléphone</th><th>Actions</th></tr></thead><tbody>{isLoadingUnits ? <tr><td colSpan="6" className="table-state">Chargement des unités…</td></tr> : units.length ? units.map((unit) => <tr key={unit.idUnite} className={unit.idUnite === highlightedUnitId ? "unit-row-highlighted" : undefined}><td>{unit.codeUnite}</td><td><strong>{unit.nomUnite}</strong></td><td>{unit.typeUnite || "—"}</td><td>{unit.ville || "—"}</td><td>{unit.telephone || "—"}</td><td><div className="table-actions"><button className="edit-action" onClick={() => editUnit(unit)}><Pencil size={16} />Modifier</button><button className="delete-action" onClick={() => deleteUnit(unit)}><Trash2 size={16} />Supprimer</button></div></td></tr>) : <tr><td colSpan="6" className="table-state">Aucune unité disponible.</td></tr>}</tbody></table></div>
+        <div className="units-table-wrap" ref={unitTableRef}><table><thead><tr><th>Code</th><th>Unité</th><th>Type</th><th>Ville</th><th>Téléphone</th><th>Actions</th></tr></thead><tbody>{isLoadingUnits ? <tr><td colSpan="6" className="table-state">Chargement des unités…</td></tr> : units.length ? units.map((unit) => <tr key={unit.idUnite} className={unit.idUnite === highlightedUnitId ? "unit-row-highlighted" : undefined}><td>{unit.codeUnite}</td><td><strong>{unit.nomUnite}</strong></td><td>{unit.typeUnite || "—"}</td><td>{unit.ville || "—"}</td><td>{unit.telephone || "—"}</td><td><div className="table-actions"><button className="edit-action" onClick={() => editUnit(unit)}><Pencil size={16} />Modifier</button><button className="delete-action" onClick={() => deleteUnit(unit)}><Trash2 size={16} />Supprimer</button></div></td></tr>) : <tr><td colSpan="6" className="table-state">Aucune unité disponible.</td></tr>}</tbody></table></div>
         {unitTotalPages > 1 && <nav className="unit-pagination" aria-label="Pagination des unités"><button type="button" onClick={() => changeUnitPage(unitPage - 1)} disabled={unitPage === 0 || isLoadingUnits} aria-label="Page précédente"><ChevronLeft size={17} />Précédent</button><div>{Array.from({ length: unitTotalPages }, (_, page) => <button type="button" key={page} className={page === unitPage ? "active" : undefined} onClick={() => changeUnitPage(page)} disabled={isLoadingUnits} aria-label={`Page ${page + 1}`} aria-current={page === unitPage ? "page" : undefined}>{page + 1}</button>)}</div><button type="button" onClick={() => changeUnitPage(unitPage + 1)} disabled={unitPage >= unitTotalPages - 1 || isLoadingUnits}>Suivant<ChevronRight size={17} /></button></nav>}
       </>}
     </article>}
@@ -385,7 +405,7 @@ function Unite() {
         {regionErrors.form && <p className="region-error" role="alert">{regionErrors.form}</p>}
         {isRegionListExpanded && <>
           <div className="unit-list-search"><label htmlFor="region-code-search">Rechercher par Code Région</label><div><Search size={18} aria-hidden="true" /><input id="region-code-search" type="search" value={regionCodeSearch} onChange={handleRegionSearch} placeholder="Saisissez un code région" /></div></div>
-          <div className="units-table-wrap"><table><thead><tr><th>Code</th><th>Région</th><th>Actions</th></tr></thead><tbody>{isLoadingRegions ? <tr><td colSpan="3" className="table-state">Chargement des régions…</td></tr> : regionRows.length ? regionRows.map((region) => <tr key={region.idRegion} className={region.idRegion === highlightedRegionId ? "unit-row-highlighted" : undefined}><td>{region.codeRegion}</td><td><strong>{region.nomRegion}</strong></td><td><div className="table-actions"><button className="edit-action" onClick={() => editRegion(region)}><Pencil size={16} />Modifier</button><button className="delete-action" onClick={() => deleteRegion(region)}><Trash2 size={16} />Supprimer</button></div></td></tr>) : <tr><td colSpan="3" className="table-state">Aucune région disponible.</td></tr>}</tbody></table></div>
+          <div className="units-table-wrap" ref={regionTableRef}><table><thead><tr><th>Code</th><th>Région</th><th>Actions</th></tr></thead><tbody>{isLoadingRegions ? <tr><td colSpan="3" className="table-state">Chargement des régions…</td></tr> : regionRows.length ? regionRows.map((region) => <tr key={region.idRegion} className={region.idRegion === highlightedRegionId ? "unit-row-highlighted" : undefined}><td>{region.codeRegion}</td><td><strong>{region.nomRegion}</strong></td><td><div className="table-actions"><button className="edit-action" onClick={() => editRegion(region)}><Pencil size={16} />Modifier</button><button className="delete-action" onClick={() => deleteRegion(region)}><Trash2 size={16} />Supprimer</button></div></td></tr>) : <tr><td colSpan="3" className="table-state">Aucune région disponible.</td></tr>}</tbody></table></div>
           {regionTotalPages > 1 && <nav className="unit-pagination" aria-label="Pagination des régions"><button type="button" onClick={() => changeRegionPage(regionPage - 1)} disabled={regionPage === 0 || isLoadingRegions} aria-label="Page précédente"><ChevronLeft size={17} />Précédent</button><div>{Array.from({ length: regionTotalPages }, (_, page) => <button type="button" key={page} className={page === regionPage ? "active" : undefined} onClick={() => changeRegionPage(page)} disabled={isLoadingRegions} aria-label={`Page ${page + 1}`} aria-current={page === regionPage ? "page" : undefined}>{page + 1}</button>)}</div><button type="button" onClick={() => changeRegionPage(regionPage + 1)} disabled={regionPage >= regionTotalPages - 1 || isLoadingRegions}>Suivant<ChevronRight size={17} /></button></nav>}
         </>}
       </article>

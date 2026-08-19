@@ -148,6 +148,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
 
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/organismes/images/**")
+                        .permitAll()
+
                         // Toutes les autres routes nécessitent
                         // une authentification
                         .anyRequest()
