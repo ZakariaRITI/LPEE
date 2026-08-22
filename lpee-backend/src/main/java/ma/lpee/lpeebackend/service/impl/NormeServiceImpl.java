@@ -40,10 +40,11 @@ public class NormeServiceImpl implements NormeService {
             );
         }
 
-        Organisme organisme = organismeRepository.findById(requestDTO.getIdOrganisme())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Organisme introuvable."
-                ));
+        Organisme organisme = requestDTO.getIdOrganisme() == null ? null
+                : organismeRepository.findById(requestDTO.getIdOrganisme())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Organisme introuvable."
+                        ));
 
         Norme norme = normeMapper.toEntity(requestDTO);
 
@@ -76,10 +77,11 @@ public class NormeServiceImpl implements NormeService {
             );
         }
 
-        Organisme organisme = organismeRepository.findById(requestDTO.getIdOrganisme())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Organisme introuvable."
-                ));
+        Organisme organisme = requestDTO.getIdOrganisme() == null ? null
+                : organismeRepository.findById(requestDTO.getIdOrganisme())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Organisme introuvable."
+                        ));
 
         normeMapper.updateEntityFromDto(requestDTO, norme);
 

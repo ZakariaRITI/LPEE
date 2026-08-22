@@ -14,6 +14,7 @@ public interface EssaiMapper {
      * Mappe la relation Produit vers l'identifiant idProduit.
      */
     @Mapping(target = "idProduit", source = "produit.idProduit")
+    @Mapping(target = "libelle", source = "libelle")
     EssaiResponseDTO toResponseDTO(Essai entity);
 
     /**
@@ -23,6 +24,7 @@ public interface EssaiMapper {
      */
     @Mapping(target = "idEssai", ignore = true)
     @Mapping(target = "produit", source = "idProduit")
+    @Mapping(target = "libelle", source = "libelle")
     Essai toEntity(EssaiRequestDTO dto);
 
     /**
@@ -31,6 +33,7 @@ public interface EssaiMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "idEssai", ignore = true)
     @Mapping(target = "produit", source = "idProduit")
+    @Mapping(target = "libelle", source = "libelle")
     void updateEntityFromDto(EssaiRequestDTO dto, @MappingTarget Essai entity);
 
     /**

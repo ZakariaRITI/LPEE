@@ -8,6 +8,7 @@ public class EssaiResponseDTO {
     private Long idEssai;
     private Long idProduit;
     private String numeroEssai;
+    private String libelle;
     private String description;
     private LocalDate dateEssai;
     private Boolean etalonnage;

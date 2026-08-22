@@ -36,7 +36,7 @@ public class Norme {
     private String statut;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_organisme", nullable = false)
+    @JoinColumn(name = "id_organisme")
     private Organisme organisme;
 
     @ManyToMany(mappedBy = "normes", fetch = FetchType.LAZY)

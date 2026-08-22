@@ -39,6 +39,7 @@ public class EssaiServiceImpl implements EssaiService {
 
         Essai essai = essaiMapper.toEntity(requestDTO);
         essai.setProduit(produit);
+        essai.setLibelle(requestDTO.getLibelle().trim());
 
         Essai saved = essaiRepository.save(essai);
 
@@ -63,6 +64,7 @@ public class EssaiServiceImpl implements EssaiService {
 
         essaiMapper.updateEntityFromDto(requestDTO, essai);
         essai.setProduit(produit);
+        essai.setLibelle(requestDTO.getLibelle().trim());
 
         Essai updated = essaiRepository.save(essai);
 

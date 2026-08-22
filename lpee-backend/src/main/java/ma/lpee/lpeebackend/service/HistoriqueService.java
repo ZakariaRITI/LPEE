@@ -229,8 +229,11 @@ public class HistoriqueService {
             HistoriqueAction entity, List<ChampModifieResponseDTO> changements) {
         String action = normaliserAction(entity.getAction());
         boolean champsDeNorme = changements.stream().anyMatch(change ->
-                "code Norme".equals(change.champ()) || "Code norme".equals(change.champ()));
-        if (!("Creation".equals(action) || "Suppression".equals(action))
+                "code Norme".equals(change.champ()) || "Code norme".equals(change.champ())
+                        || "numero Norme".equals(change.champ()) || "Numéro de norme".equals(change.champ())
+                        || "nom Norme".equals(change.champ()) || "Nom norme".equals(change.champ())
+                        || "annee".equals(change.champ()) || "Année".equals(change.champ()));
+        if (!("Creation".equals(action) || "Modification".equals(action) || "Suppression".equals(action))
                 || !"Norme".equals(entity.getElementType()) || !champsDeNorme) {
             return changements;
         }
@@ -241,9 +244,10 @@ public class HistoriqueService {
         boolean organismePresent = detail.stream().anyMatch(change -> "Organisme".equals(change.champ()));
         if (!organismePresent && entity.getElementId() != null) {
             normeRepository.findById(entity.getElementId())
-                    .map(norme -> norme.getOrganisme().getNomOrganisme())
-                    .ifPresent(nomOrganisme -> detail.add(
-                            new ChampModifieResponseDTO("Organisme", null, nomOrganisme)));
+                    .map(norme -> norme.getOrganisme() == null ? null : norme.getOrganisme().getNomOrganisme())
+                    .ifPresent(nomOrganisme -> detail.add(new ChampModifieResponseDTO(
+                            "Organisme", "Suppression".equals(action) ? nomOrganisme : null,
+                            "Suppression".equals(action) ? null : nomOrganisme)));
         }
         return detail;
     }

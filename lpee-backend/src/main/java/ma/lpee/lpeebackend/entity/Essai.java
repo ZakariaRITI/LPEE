@@ -21,6 +21,9 @@ public class Essai {
     @Column(name = "numero_essai", nullable = false, unique = true, length = 100)
     private String numeroEssai;
 
+    @Column(name = "libelle", nullable = false, length = 200)
+    private String libelle;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

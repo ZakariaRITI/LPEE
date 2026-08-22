@@ -13,6 +13,9 @@ public class EssaiRequestDTO {
     @NotBlank(message = "Le numéro d'essai est obligatoire")
     private String numeroEssai;
 
+    @NotBlank(message = "Le libellé est obligatoire")
+    private String libelle;
+
     private String description;
     private LocalDate dateEssai;
     private Boolean etalonnage;

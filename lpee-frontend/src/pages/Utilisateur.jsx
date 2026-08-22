@@ -1,107 +1,67 @@
-import { useCallback, useEffect, useState } from "react";
-import { KeyRound, Pencil, Plus, Search, Trash2, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, Info, KeyRound, Pencil, RotateCcw, Save, Search, Trash2, Users, X } from "lucide-react";
+import Swal from "sweetalert2";
 import api from "../services/api";
 import "./Unite.css";
 
 const DEFAULT_PASSWORD = "Password.123";
-const initial = { idRole: "", idUnite: "", nomUser: "", matricule: "", email: "", motDePasse: "" };
+const initial = { idRole: "", idUnite: "", nomUser: "", matricule: "", email: "", motDePasse: "", confirmerMotDePasse: "" };
+const pageSize = 5;
 
-function Utilisateur() {
-  const [users, setUsers] = useState([]);
-  const [units, setUnits] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [form, setForm] = useState(initial);
-  const [editing, setEditing] = useState(null);
-  const [search, setSearch] = useState("");
-  const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false);
+const isValidEmail = (value) => {
+  const email = value.trim();
+  if (!email || /\s/.test(email)) return false;
+  const parts = email.split("@");
+  if (parts.length !== 2) return false;
+  const [localPart, domain] = parts;
+  const validLocalPart = /^(?=.{1,64}$)(?=.*[A-Za-z])[A-Za-z0-9]+(?:[._%+-][A-Za-z0-9]+)*$/;
+  const validDomain = /^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
+  return validLocalPart.test(localPart) && validDomain.test(domain);
+};
 
-  const load = useCallback(async () => {
-    try {
-      const [userResponse, unitResponse, roleResponse] = await Promise.all([
-        api.get("/api/utilisateurs"), api.get("/api/unites"), api.get("/api/roles"),
-      ]);
-      setUsers(userResponse.data);
-      setUnits(unitResponse.data);
-      setRoles(roleResponse.data);
-    } catch {
-      setErrors({ form: "Impossible de charger les utilisateurs." });
-    }
-  }, [setErrors]);
-
-  useEffect(() => {
-    Promise.all([api.get("/api/utilisateurs"), api.get("/api/unites"), api.get("/api/roles")])
-      .then(([userResponse, unitResponse, roleResponse]) => {
-        setUsers(userResponse.data);
-        setUnits(unitResponse.data);
-        setRoles(roleResponse.data);
-      })
-      .catch(() => setErrors({ form: "Impossible de charger les utilisateurs." }));
-  }, []);
-
-  const submit = async (event) => {
-    event.preventDefault();
-    const nextErrors = {};
-    ["idRole", "idUnite", "nomUser", "matricule", "email", "motDePasse"].forEach((key) => {
-      if (!form[key]) nextErrors[key] = "Champ obligatoire.";
-    });
-    if (Object.keys(nextErrors).length) { setErrors(nextErrors); return; }
-
-    const payload = { ...form, idRole: Number(form.idRole), idUnite: Number(form.idUnite), statut: "ACTIF" };
-    try {
-      if (editing) await api.put(`/api/utilisateurs/${editing}`, payload);
-      else await api.post("/api/utilisateurs", payload);
-      setForm(initial); setEditing(null); setShowForm(false); setErrors({});
-      setMessage("Utilisateur enregistré avec succès.");
-      load();
-    } catch (error) {
-      const response = error.response?.data;
-      setErrors(response?.messages || { form: response?.message || "L’enregistrement a échoué." });
-    }
-  };
-
-  const edit = (user) => {
-    setForm({ idRole: String(user.idRole), idUnite: String(user.idUnite), nomUser: user.nomUser, matricule: user.matricule, email: user.email, motDePasse: DEFAULT_PASSWORD });
-    setEditing(user.idUser); setErrors({}); setShowForm(true);
-  };
-
-  const updateStatus = async (user, statut, label) => {
-    if (!window.confirm(`${label} l’utilisateur « ${user.nomUser} » ?`)) return;
-    try {
-      await api.put(`/api/utilisateurs/${user.idUser}`, {
-        idRole: user.idRole, idUnite: user.idUnite, nomUser: user.nomUser, matricule: user.matricule,
-        email: user.email, motDePasse: DEFAULT_PASSWORD, statut,
-      });
-      setMessage(label === "Supprimer" ? "Utilisateur désactivé." : "Mot de passe réinitialisé.");
-      load();
-    } catch (error) {
-      setErrors({ form: error.response?.data?.message || "L’opération a échoué." });
-    }
-  };
-
-  const getUnit = (user) => units.find((unit) => unit.idUnite === user.idUnite);
-  const typeClass = (user) => {
-    const unitType = getUnit(user)?.typeUnite?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    return unitType === "regionale" ? "regional" : "specialized";
-  };
-  const visibleUsers = users.filter((user) => user.statut?.toLowerCase() !== "inactif" && (!search || String(user.idUnite) === search));
-  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-
-  return <section className="unite-page">
-    <div className="page-heading"><div><p className="dashboard-eyebrow">Administration</p><h1>Gestion des utilisateurs</h1><p>Administrez les accès au référentiel LPEE.</p></div><span className="page-heading-icon"><Users /></span></div>
-    <div className="unit-toolbar"><button className="add-region-button" onClick={() => { setForm(initial); setEditing(null); setErrors({}); setShowForm(!showForm); }}><Plus size={17} />Ajouter un utilisateur</button></div>
-    {message && <p className="form-success" role="status">{message}</p>}
-    {showForm && <article className="unite-form-card"><div className="form-card-heading"><div><h2>{editing ? "Modifier l’utilisateur" : "Nouvel utilisateur"}</h2></div></div><form className="unite-form" onSubmit={submit}><div className="form-grid">
-      {[['nomUser', 'Nom'], ['matricule', 'Matricule'], ['email', 'Email']].map(([key, label]) => <div className="form-field" key={key}><label>{label} <b>*</b></label><input type={key === "email" ? "email" : "text"} value={form[key]} onChange={(event) => setField(key, event.target.value)} required />{errors[key] && <span className="field-error">{errors[key]}</span>}</div>)}
-      <div className="form-field"><label>Rôle <b>*</b></label><select value={form.idRole} onChange={(event) => setField("idRole", event.target.value)}><option value="">Sélectionnez</option>{roles.map((role) => <option key={role.idRole} value={role.idRole}>{role.nomRole}</option>)}</select>{errors.idRole && <span className="field-error">{errors.idRole}</span>}</div>
-      <div className="form-field"><label>Unité <b>*</b></label><select value={form.idUnite} onChange={(event) => setField("idUnite", event.target.value)}><option value="">Sélectionnez</option>{units.map((unit) => <option key={unit.idUnite} value={unit.idUnite}>{unit.nomUnite}</option>)}</select>{errors.idUnite && <span className="field-error">{errors.idUnite}</span>}</div>
-      <div className="form-field form-field-wide"><label>Mot de passe <b>*</b></label><input type="password" value={form.motDePasse} onChange={(event) => setField("motDePasse", event.target.value)} />{errors.motDePasse && <span className="field-error">{errors.motDePasse}</span>}</div>
-    </div>{errors.form && <p className="form-global-error">{errors.form}</p>}<div className="form-actions"><button type="button" className="reset-button" onClick={() => setShowForm(false)}>Annuler</button><button className="save-button">Enregistrer</button></div></form></article>}
-    <article className="units-list-card"><div className="list-card-heading"><div><h2>Liste des utilisateurs</h2><p>{visibleUsers.length} utilisateur(s) actif(s)</p></div><div className="user-filter"><Search size={17} /><select aria-label="Filtrer par unité" value={search} onChange={(event) => setSearch(event.target.value)}><option value="">Toutes les unités</option>{units.map((unit) => <option key={unit.idUnite} value={unit.idUnite}>{unit.nomUnite}</option>)}</select></div></div>
-      <div className="units-table-wrap"><table><thead><tr><th>Utilisateur</th><th>Matricule</th><th>Email</th><th>Unité</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>{visibleUsers.map((user) => <tr key={user.idUser}><td><strong>{user.nomUser}</strong></td><td>{user.matricule}</td><td>{user.email}</td><td><span className={`unit-type ${typeClass(user)}`}>{getUnit(user)?.nomUnite || "—"}</span></td><td>{roles.find((role) => role.idRole === user.idRole)?.nomRole || "—"}</td><td><div className="table-actions"><button className="edit-action" onClick={() => edit(user)}><Pencil size={16} />Modifier</button><button className="edit-action" onClick={() => updateStatus(user, "ACTIF", "Réinitialiser le mot de passe de")}><KeyRound size={16} />Réinitialiser</button><button className="delete-action" onClick={() => updateStatus(user, "INACTIF", "Supprimer")}><Trash2 size={16} />Supprimer</button></div></td></tr>)}</tbody></table></div>
-    </article>
-  </section>;
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
+  return <nav className="unit-pagination" aria-label="Pagination des utilisateurs"><button type="button" disabled={page === 0} onClick={() => onChange(page - 1)}><ChevronLeft size={17} />Précédent</button><div>{Array.from({ length: totalPages }, (_, index) => <button type="button" key={index} className={page === index ? "active" : undefined} onClick={() => onChange(index)} aria-current={page === index ? "page" : undefined}>{index + 1}</button>)}</div><button type="button" disabled={page >= totalPages - 1} onClick={() => onChange(page + 1)}>Suivant<ChevronRight size={17} /></button></nav>;
 }
 
-export default Utilisateur;
+export default function Utilisateur() {
+  const formRef = useRef(null); const listRef = useRef(null); const tableRef = useRef(null); const shouldScrollToListRef = useRef(false); const shouldScrollToTableRef = useRef(false); const successTimeoutRef = useRef(null);
+  const [users, setUsers] = useState([]); const [units, setUnits] = useState([]); const [roles, setRoles] = useState([]); const [form, setForm] = useState(initial); const [editing, setEditing] = useState(null); const [errors, setErrors] = useState({}); const [pageSuccess, setPageSuccess] = useState(""); const [highlightedId, setHighlightedId] = useState(null);
+  const [isSaving, setSaving] = useState(false); const [isLoading, setLoading] = useState(false); const [isFormVisible, setFormVisible] = useState(true); const [isListVisible, setListVisible] = useState(false); const [isListExpanded, setListExpanded] = useState(true); const [unitFilter, setUnitFilter] = useState(""); const [userSearch, setUserSearch] = useState(""); const [page, setPage] = useState(0);
+
+  const load = useCallback(async () => { try { setLoading(true); const [userResponse, unitResponse, roleResponse] = await Promise.all([api.get("/api/utilisateurs"), api.get("/api/unites"), api.get("/api/roles")]); setUsers(userResponse.data); setUnits(unitResponse.data); setRoles(roleResponse.data); } catch { setErrors((current) => ({ ...current, form: "Impossible de charger les utilisateurs." })); } finally { setLoading(false); } }, []);
+  useEffect(() => { const timer = window.setTimeout(load, 0); return () => window.clearTimeout(timer); }, [load]);
+  useEffect(() => () => clearTimeout(successTimeoutRef.current), []);
+  useEffect(() => { if (!isListVisible || !isListExpanded || isLoading || !shouldScrollToListRef.current || !listRef.current) return; shouldScrollToListRef.current = false; const top = listRef.current.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: Math.max(0, top - 105), behavior: "smooth" }); }, [isListVisible, isListExpanded, isLoading]);
+  useEffect(() => { if (isLoading || !shouldScrollToTableRef.current || !tableRef.current) return; shouldScrollToTableRef.current = false; const top = tableRef.current.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: Math.max(0, top - 105), behavior: "smooth" }); }, [isLoading, page]);
+
+  const showSuccess = (id, text, scrollTop = true) => { setPageSuccess(text); setHighlightedId(id); clearTimeout(successTimeoutRef.current); successTimeoutRef.current = setTimeout(() => { setPageSuccess(""); setHighlightedId(null); }, 10000); requestAnimationFrame(() => scrollTop ? window.scrollTo({ top: 0, behavior: "smooth" }) : listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); };
+  const scrollToFirstError = () => requestAnimationFrame(() => requestAnimationFrame(() => { const first = formRef.current?.querySelector('[data-validation-error="true"]'); if (!first) return; const top = first.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: Math.max(0, top - 125), behavior: "smooth" }); first.querySelector("input, select")?.focus({ preventScroll: true }); }));
+  const validate = () => { const next = {}; ["idRole", "idUnite", "nomUser", "matricule", "email", "motDePasse", "confirmerMotDePasse"].forEach((key) => { if (!form[key]) next[key] = "Champ obligatoire."; }); if (form.email && !isValidEmail(form.email)) next.email = "Veuillez saisir une adresse email valide."; if (form.motDePasse && form.confirmerMotDePasse && form.motDePasse !== form.confirmerMotDePasse) next.confirmerMotDePasse = "Les mots de passe ne correspondent pas."; setErrors(next); if (Object.keys(next).length) scrollToFirstError(); return !Object.keys(next).length; };
+  const submit = async (event) => { event.preventDefault(); if (!validate()) return; if (editing) { const confirmation = await Swal.fire({ title: "Confirmer la modification ?", text: `Mettre à jour « ${form.nomUser} » ?`, icon: "question", showCancelButton: true, confirmButtonText: "Confirmer", cancelButtonText: "Annuler", confirmButtonColor: "#0877b6", cancelButtonColor: "#6e8195", focusCancel: true, returnFocus: false, reverseButtons: true }); if (!confirmation.isConfirmed) return; } const payload = { idRole: Number(form.idRole), idUnite: Number(form.idUnite), nomUser: form.nomUser, matricule: form.matricule, email: form.email.trim(), motDePasse: form.motDePasse, statut: "ACTIF" }; try { setSaving(true); const wasEditing = Boolean(editing); const response = wasEditing ? await api.put(`/api/utilisateurs/${editing}`, payload) : await api.post("/api/utilisateurs", payload); resetForm(); setListVisible(true); setListExpanded(true); await load(); showSuccess(response.data?.idUser ?? editing, wasEditing ? "Utilisateur modifié." : "Utilisateur enregistré."); } catch (error) { const response = error.response?.data; setErrors(response?.messages || { form: response?.message || "L’enregistrement a échoué." }); } finally { setSaving(false); } };
+
+  const resetForm = () => { setForm(initial); setEditing(null); setErrors({}); };
+  const edit = (user) => { setForm({ idRole: String(user.idRole), idUnite: String(user.idUnite), nomUser: user.nomUser, matricule: user.matricule, email: user.email, motDePasse: DEFAULT_PASSWORD, confirmerMotDePasse: DEFAULT_PASSWORD }); setEditing(user.idUser); setFormVisible(true); setErrors({}); requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); };
+  const updateStatus = async (user, statut, action) => { const isDelete = action === "delete"; const confirmation = await Swal.fire({ title: isDelete ? "Supprimer cet utilisateur ?" : "Réinitialiser le mot de passe ?", text: isDelete ? `L’utilisateur « ${user.nomUser} » ne sera plus affiché.` : `Le mot de passe de « ${user.nomUser} » sera réinitialisé. Son mot de passe par défaut deviendra « ${DEFAULT_PASSWORD} ».` , icon: isDelete ? "warning" : "question", showCancelButton: true, confirmButtonText: isDelete ? "Supprimer" : "Réinitialiser", cancelButtonText: "Annuler", confirmButtonColor: isDelete ? "#b8444d" : "#0877b6", cancelButtonColor: "#6e8195", focusCancel: true, returnFocus: false, reverseButtons: true }); if (!confirmation.isConfirmed) return; try { await api.put(`/api/utilisateurs/${user.idUser}`, { idRole: user.idRole, idUnite: user.idUnite, nomUser: user.nomUser, matricule: user.matricule, email: user.email, motDePasse: DEFAULT_PASSWORD, statut }); if (isDelete && editing === user.idUser) resetForm(); await load(); showSuccess(null, isDelete ? "Utilisateur supprimé." : `Mot de passe réinitialisé : ${DEFAULT_PASSWORD}`); } catch (error) { setErrors({ form: error.response?.data?.message || "L’opération a échoué." }); } };
+
+  const setField = (key, value) => { setForm((current) => ({ ...current, [key]: value })); setErrors((current) => ({ ...current, [key]: undefined, form: undefined })); };
+  const setEmail = (value) => { setForm((current) => ({ ...current, email: value })); setErrors((current) => ({ ...current, email: isValidEmail(value) ? undefined : current.email, form: undefined })); };
+  const setPassword = (key, value) => { const password = key === "motDePasse" ? value : form.motDePasse; const confirmation = key === "confirmerMotDePasse" ? value : form.confirmerMotDePasse; setForm((current) => ({ ...current, [key]: value })); setErrors((current) => ({ ...current, [key]: undefined, confirmerMotDePasse: password && confirmation && password === confirmation ? undefined : current.confirmerMotDePasse, form: undefined })); };
+  const getUnit = (user) => units.find((unit) => unit.idUnite === user.idUnite); const typeClass = (user) => getUnit(user)?.typeUnite?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "regionale" ? "regional" : "specialized";
+  const filteredUsers = useMemo(() => { const search = userSearch.trim().toLocaleLowerCase("fr"); return users.filter((user) => user.statut?.toLowerCase() !== "inactif" && (!unitFilter || String(user.idUnite) === unitFilter) && (!search || [user.nomUser, user.matricule, user.email].some((value) => value?.toLocaleLowerCase("fr").includes(search)))); }, [unitFilter, userSearch, users]); const totalPages = Math.ceil(filteredUsers.length / pageSize); const rows = filteredUsers.slice(page * pageSize, page * pageSize + pageSize);
+  const toggleList = () => { const next = !isListVisible; setListVisible(next); if (next) { shouldScrollToListRef.current = true; setListExpanded(true); load(); } }; const changePage = (next) => { if (next < 0 || next >= totalPages || next === page) return; shouldScrollToTableRef.current = true; setPage(next); }; const changeFilters = (setter, value) => { setter(value); setPage(0); };
+  const fieldClass = (key, wide = false) => `form-field${wide ? " form-field-wide" : ""}${errors[key] ? " validation-field-error" : ""}`;
+
+  return <section className="unite-page unit-management-page user-management-page"><div className="page-heading"><div><p className="dashboard-eyebrow">Administration</p><h1>Gestion des utilisateurs</h1><p>Administrez les accès au référentiel LPEE.</p></div><span className="page-heading-icon"><Users /></span></div><div className="unit-toolbar"><button className="view-units-button" onClick={toggleList}><Eye size={18} />{isListVisible ? "Masquer les utilisateurs" : "Voir les utilisateurs"}</button></div>{pageSuccess && <p className="unit-page-success" role="status">{pageSuccess}</p>}
+    <article className="unite-form-card" ref={formRef}><div className="form-card-heading"><div><h2>{editing ? "Modifier l’utilisateur" : "Nouvel utilisateur"}</h2><p>Les champs marqués d’un astérisque sont obligatoires.</p></div><div className="form-heading-actions">{editing && <button type="button" className="cancel-edit-button" onClick={resetForm}><X size={17} />Annuler la modification</button>}<button type="button" className="form-collapse-button" onClick={() => setFormVisible((visible) => !visible)} aria-expanded={isFormVisible}>{isFormVisible ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button></div></div>{isFormVisible && <form className="unite-form user-form" onSubmit={submit} noValidate autoComplete={editing ? "on" : "off"}><div className="form-grid">
+      <div className={fieldClass("nomUser")} data-validation-error={Boolean(errors.nomUser)}><label htmlFor="user-name">Nom <b>*</b></label><input id="user-name" name="nomUser" value={form.nomUser} onChange={(event) => setField("nomUser", event.target.value)} aria-invalid={Boolean(errors.nomUser)} />{errors.nomUser && <span className="field-error">{errors.nomUser}</span>}</div>
+      <div className={fieldClass("matricule")} data-validation-error={Boolean(errors.matricule)}><label htmlFor="user-matricule">Matricule <b>*</b></label><input id="user-matricule" name="matricule" value={form.matricule} onChange={(event) => setField("matricule", event.target.value)} aria-invalid={Boolean(errors.matricule)} />{errors.matricule && <span className="field-error">{errors.matricule}</span>}</div>
+      <div className={fieldClass("email")} data-validation-error={Boolean(errors.email)}><label htmlFor="user-email">Email <b>*</b></label><input id="user-email" name="email" type="email" autoComplete={editing ? "email" : "off"} value={form.email} onChange={(event) => setEmail(event.target.value)} aria-invalid={Boolean(errors.email)} />{errors.email && <span className="field-error">{errors.email}</span>}</div>
+      <div className={fieldClass("idRole")} data-validation-error={Boolean(errors.idRole)}><label htmlFor="user-role">Rôle <b>*</b></label><select id="user-role" value={form.idRole} onChange={(event) => setField("idRole", event.target.value)} aria-invalid={Boolean(errors.idRole)}><option value="">Sélectionnez</option>{roles.map((role) => <option key={role.idRole} value={role.idRole}>{role.nomRole}</option>)}</select>{errors.idRole && <span className="field-error">{errors.idRole}</span>}</div>
+      <div className={fieldClass("idUnite")} data-validation-error={Boolean(errors.idUnite)}><label htmlFor="user-unit">Unité <b>*</b></label><select id="user-unit" value={form.idUnite} onChange={(event) => setField("idUnite", event.target.value)} aria-invalid={Boolean(errors.idUnite)}><option value="">Sélectionnez</option>{units.map((unit) => <option key={unit.idUnite} value={unit.idUnite}>{unit.nomUnite}</option>)}</select>{errors.idUnite && <span className="field-error">{errors.idUnite}</span>}</div>
+      <div className={fieldClass("motDePasse", true)} data-validation-error={Boolean(errors.motDePasse)}><label htmlFor="user-password">Mot de passe <b>*</b></label><input id="user-password" name="motDePasse" type="password" autoComplete="new-password" value={form.motDePasse} onChange={(event) => setPassword("motDePasse", event.target.value)} aria-invalid={Boolean(errors.motDePasse)} />{errors.motDePasse && <span className="field-error">{errors.motDePasse}</span>}</div>
+      <div className={fieldClass("confirmerMotDePasse", true)} data-validation-error={Boolean(errors.confirmerMotDePasse)}><label htmlFor="user-password-confirmation">Confirmer le mot de passe <b>*</b></label><input id="user-password-confirmation" name="confirmerMotDePasse" type="password" autoComplete="new-password" value={form.confirmerMotDePasse} onChange={(event) => setPassword("confirmerMotDePasse", event.target.value)} aria-invalid={Boolean(errors.confirmerMotDePasse)} />{errors.confirmerMotDePasse && <span className="field-error">{errors.confirmerMotDePasse}</span>}</div>
+    </div>{errors.form && <p className="form-global-error" role="alert">{errors.form}</p>}<div className="form-actions"><button type="button" className="reset-button" onClick={resetForm}><RotateCcw size={18} />Réinitialiser</button><button type="submit" formNoValidate className="save-button" disabled={isSaving}><Save size={18} />{isSaving ? "Enregistrement…" : editing ? "Modifier" : "Enregistrer"}</button></div></form>}</article>
+    {isListVisible && <article className="units-list-card" ref={listRef}><div className="list-card-heading"><div><h2>Liste des utilisateurs</h2><p>{isLoading ? "Chargement…" : `${filteredUsers.length} utilisateur(s) actif(s)`}</p></div><button type="button" className="form-collapse-button" onClick={() => setListExpanded((expanded) => !expanded)} aria-expanded={isListExpanded}>{isListExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button></div><div className="password-reset-notice" role="note"><Info size={18} /><p><strong>Réinitialisation du mot de passe</strong><span>Le mot de passe par défaut attribué à l’utilisateur sera <code>{DEFAULT_PASSWORD}</code>.</span></p></div>{isListExpanded && <><div className="user-list-filters"><div className="unit-list-search"><label htmlFor="user-search">Rechercher</label><div><Search size={18} /><input id="user-search" type="search" value={userSearch} onChange={(event) => changeFilters(setUserSearch, event.target.value)} placeholder="Nom, matricule ou email" /></div></div><div className="form-field"><label htmlFor="unit-filter">Filtrer par unité</label><select id="unit-filter" value={unitFilter} onChange={(event) => changeFilters(setUnitFilter, event.target.value)}><option value="">Toutes les unités</option>{units.map((unit) => <option key={unit.idUnite} value={unit.idUnite}>{unit.nomUnite}</option>)}</select></div></div><div className="units-table-wrap" ref={tableRef}><table><thead><tr><th>Utilisateur</th><th>Matricule</th><th>Email</th><th>Unité</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>{isLoading ? <tr><td colSpan="6" className="table-state">Chargement des utilisateurs…</td></tr> : rows.length ? rows.map((user) => <tr key={user.idUser} className={user.idUser === highlightedId ? "unit-row-highlighted" : undefined}><td><strong>{user.nomUser}</strong></td><td>{user.matricule}</td><td>{user.email}</td><td><span className={`unit-type ${typeClass(user)}`}>{getUnit(user)?.nomUnite || "—"}</span></td><td>{roles.find((role) => role.idRole === user.idRole)?.nomRole || "—"}</td><td><div className="table-actions"><button className="edit-action" onClick={() => edit(user)}><Pencil size={16} />Modifier</button><button className="edit-action" onClick={() => updateStatus(user, "ACTIF", "reset")}><KeyRound size={16} />Réinitialiser</button><button className="delete-action" onClick={() => updateStatus(user, "INACTIF", "delete")}><Trash2 size={16} />Supprimer</button></div></td></tr>) : <tr><td colSpan="6" className="table-state">Aucun utilisateur disponible.</td></tr>}</tbody></table></div><Pagination page={page} totalPages={totalPages} onChange={changePage} /></>}</article>}
+  </section>;
+}

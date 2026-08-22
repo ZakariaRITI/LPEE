@@ -11,22 +11,43 @@ const actionLabels = {
 
 const displayValue = (value) => value == null || value === "" ? "" : `“${value}”`;
 
+const normalize = (value = "") => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
+
 const isEssayDetail = (field = "") => {
-  const normalized = field.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
+  const normalized = normalize(field);
   return normalized === "essai" || normalized === "numero d’essai" || normalized === "numero essai";
 };
 
+const isOrganismeImageDetail = (field = "") => {
+  const normalized = normalize(field);
+  return normalized.includes("image") || normalized.includes("photo");
+};
+
+const resolveImageSource = (source) => source?.startsWith("/") ? `${api.defaults.baseURL}${source}` : source;
+
+function AuditImage({ source, label }) {
+  const [hasError, setHasError] = useState(false);
+  return <span className="historique-image-item"><span>{label}</span>{source && !hasError ? <img src={resolveImageSource(source)} alt={label} onError={() => setHasError(true)} /> : <small>Image indisponible</small>}</span>;
+}
+
+function OrganismeImageChange({ action, change }) {
+  if (action === "Creation") return <span className="historique-image-values"><AuditImage source={change.nouvelleValeur} label="Nouvelle image" /></span>;
+  if (action === "Suppression") return <span className="historique-image-values"><AuditImage source={change.ancienneValeur} label="Image associée" /></span>;
+  return <span className="historique-image-values"><AuditImage source={change.ancienneValeur} label="Ancienne image" /><span className="change-arrow" aria-hidden="true">→</span><AuditImage source={change.nouvelleValeur} label="Nouvelle image" /></span>;
+}
+
 function ChangeDetail({ item }) {
+  const isOrganisme = normalize(item.actionSur) === "organisme";
   const changes = (item.changements || []).filter((change) => !isEssayDetail(change.champ));
   if (!changes.length) return "—";
   return <div className="historique-changes">
     {changes.map((change, index) => <span className="historique-change" key={`${change.champ}-${index}`}>
       <b>{change.champ}</b>
-      <span className="change-values">
+      {isOrganisme && isOrganismeImageDetail(change.champ) ? <OrganismeImageChange action={item.action} change={change} /> : <span className="change-values">
         {change.ancienneValeur != null && change.ancienneValeur !== "" && <span className="old-value">{displayValue(change.ancienneValeur)}</span>}
         {change.ancienneValeur != null && change.ancienneValeur !== "" && change.nouvelleValeur != null && change.nouvelleValeur !== "" && <span className="change-arrow" aria-label="devient">→</span>}
         {change.nouvelleValeur != null && change.nouvelleValeur !== "" && <span className="new-value">{displayValue(change.nouvelleValeur)}</span>}
-      </span>
+      </span>}
     </span>)}
   </div>;
 }

@@ -19,5 +19,6 @@
 .historique-change .old-value { color: #a0444c; text-decoration: line-through; text-decoration-color: rgba(160,68,76,.4); }
 .historique-change .new-value { color: #147458; font-weight: 700; }
 .change-arrow { color: #8b9aaa; text-align: center; }
+.historique-image-values { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; }.historique-image-item { display: grid; justify-items: center; gap: .3rem; color: #526c82; font-size: .7rem; font-weight: 700; }.historique-image-item img, .historique-image-item small { width: 82px; height: 56px; border: 1px solid #dce5ee; border-radius: 7px; background: #f7fafc; }.historique-image-item img { padding: .2rem; object-fit: contain; }.historique-image-item small { display: grid; place-items: center; padding: .3rem; color: #8798a7; text-align: center; font-size: .65rem; font-weight: 500; }
 .historique-error { margin: 1rem 1.35rem; padding: .8rem 1rem; border-radius: 8px; color: #a83842; background: #fff0f1; }
-@media (max-width: 650px) { .historique-toolbar { flex-direction: column; }.historique-search, .historique-toolbar select { width: 100%; } }
+@media (max-width: 650px) { .historique-toolbar { flex-direction: column; }.historique-search, .historique-toolbar select { width: 100%; }.historique-image-values { justify-content: flex-start; } }
